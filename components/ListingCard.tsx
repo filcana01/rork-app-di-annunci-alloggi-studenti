@@ -1,11 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Heart, MapPin, Home, Car, DoorOpen } from 'lucide-react-native';
 import { Listing } from '@/types';
 import { useApp } from '@/hooks/use-app-context';
 import { router } from 'expo-router';
-
-const { width } = Dimensions.get('window');
+import { Colors, Shadows, Typography, Spacing, BorderRadius } from '@/constants/colors';
 
 interface ListingCardProps {
   listing: Listing;
@@ -18,11 +17,11 @@ export default function ListingCard({ listing }: ListingCardProps) {
   const getCategoryIcon = () => {
     switch (listing.category) {
       case 'room':
-        return <DoorOpen size={16} color="#666" />;
+        return <DoorOpen size={16} color={Colors.text.secondary} />;
       case 'apartment':
-        return <Home size={16} color="#666" />;
+        return <Home size={16} color={Colors.text.secondary} />;
       case 'parking':
-        return <Car size={16} color="#666" />;
+        return <Car size={16} color={Colors.text.secondary} />;
     }
   };
 
@@ -54,8 +53,8 @@ export default function ListingCard({ listing }: ListingCardProps) {
         >
           <Heart 
             size={20} 
-            color={isFavorite ? '#EF4444' : '#FFF'}
-            fill={isFavorite ? '#EF4444' : 'transparent'}
+            color={isFavorite ? Colors.error : Colors.text.secondary}
+            fill={isFavorite ? Colors.error : 'transparent'}
           />
         </TouchableOpacity>
         <View style={styles.categoryBadge}>
@@ -68,7 +67,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
         <Text style={styles.title} numberOfLines={1}>{listing.title}</Text>
         
         <View style={styles.locationRow}>
-          <MapPin size={14} color="#666" />
+          <MapPin size={14} color={Colors.text.secondary} />
           <Text style={styles.location} numberOfLines={1}>
             {listing.address.city}, {listing.address.street}
           </Text>
@@ -95,15 +94,13 @@ export default function ListingCard({ listing }: ListingCardProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: Colors.background.primary,
+    borderRadius: BorderRadius.lg,
+    marginHorizontal: Spacing.lg,
+    marginVertical: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    ...Shadows.medium,
   },
   imageContainer: {
     position: 'relative',
@@ -111,84 +108,89 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: 200,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    borderTopLeftRadius: BorderRadius.lg,
+    borderTopRightRadius: BorderRadius.lg,
   },
   favoriteButton: {
     position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 20,
-    padding: 8,
+    top: Spacing.md,
+    right: Spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: BorderRadius.full,
+    padding: Spacing.sm,
+    ...Shadows.small,
   },
   categoryBadge: {
     position: 'absolute',
-    top: 12,
-    left: 12,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    top: Spacing.md,
+    left: Spacing.md,
+    backgroundColor: Colors.background.primary,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: Spacing.xs,
+    ...Shadows.small,
   },
   categoryText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.text.secondary,
   },
   content: {
-    padding: 16,
+    padding: Spacing.lg,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 8,
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.text.primary,
+    marginBottom: Spacing.sm,
+    lineHeight: Typography.fontSize.lg * Typography.lineHeight.tight,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginBottom: 8,
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   location: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
     flex: 1,
   },
   details: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
   },
   surface: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+    fontWeight: Typography.fontWeight.medium,
   },
   rooms: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+    fontWeight: Typography.fontWeight.medium,
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
   },
   price: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2563EB',
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.primary[600],
   },
   priceLabel: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
     marginLeft: 2,
   },
   expenses: {
-    fontSize: 12,
-    color: '#999',
-    marginLeft: 8,
+    fontSize: Typography.fontSize.xs,
+    color: Colors.text.tertiary,
+    marginLeft: Spacing.sm,
   },
 });

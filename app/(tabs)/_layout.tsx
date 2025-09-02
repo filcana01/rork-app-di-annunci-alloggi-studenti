@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import { Home, Search, Heart, User, MessageCircle, Plus } from "lucide-react-native";
 import React from "react";
 import { useApp } from "@/hooks/use-app-context";
+import { Colors } from "@/constants/colors";
 
 export default function TabLayout() {
   const { t } = useApp();
@@ -9,8 +10,21 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#2563EB',
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarActiveTintColor: Colors.primary[500],
+        tabBarInactiveTintColor: Colors.neutral[400],
+        tabBarStyle: {
+          backgroundColor: Colors.background.primary,
+          borderTopColor: Colors.border.light,
+          borderTopWidth: 1,
+          paddingTop: 8,
+          paddingBottom: 8,
+          height: 84,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+          marginTop: 4,
+        },
         headerShown: false,
       }}
     >

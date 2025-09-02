@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Search, SlidersHorizontal } from 'lucide-react-native';
 import { useApp } from '@/hooks/use-app-context';
+import { Colors, Shadows, Typography, Spacing, BorderRadius } from '@/constants/colors';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -15,7 +16,7 @@ export default function SearchBar({ onSearch, onFilterPress }: SearchBarProps) {
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
-        <Search size={20} color="#666" />
+        <Search size={20} color={Colors.text.secondary} />
         <TextInput
           style={styles.input}
           placeholder={t.search.searchPlaceholder}
@@ -26,7 +27,7 @@ export default function SearchBar({ onSearch, onFilterPress }: SearchBarProps) {
         />
       </View>
       <TouchableOpacity style={styles.filterButton} onPress={onFilterPress}>
-        <SlidersHorizontal size={20} color="#FFF" />
+        <SlidersHorizontal size={20} color={Colors.text.inverse} />
       </TouchableOpacity>
     </View>
   );
@@ -35,31 +36,37 @@ export default function SearchBar({ onSearch, onFilterPress }: SearchBarProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFF',
-    gap: 12,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.background.primary,
+    gap: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
   },
   searchContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    gap: 8,
+    backgroundColor: Colors.background.tertiary,
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
   },
   input: {
     flex: 1,
     height: 44,
-    fontSize: 16,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.primary,
   },
   filterButton: {
     width: 44,
     height: 44,
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
+    backgroundColor: Colors.primary[500],
+    borderRadius: BorderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Shadows.small,
   },
 });

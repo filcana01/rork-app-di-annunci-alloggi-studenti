@@ -4,6 +4,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { mockListings } from '@/mocks/listings';
 import { useApp } from '@/hooks/use-app-context';
 import { X, MapPin, Home, Bath, Maximize, Calendar, Check, MessageCircle, Heart, Building, Shield, Euro } from 'lucide-react-native';
+import { Colors, Typography, Spacing, BorderRadius } from '@/constants/colors';
 
 const { width } = Dimensions.get('window');
 
@@ -28,7 +29,7 @@ export default function ListingDetailScreen() {
       <ScrollView>
         <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-            <X size={24} color="#000" />
+            <X size={24} color={Colors.text.primary} />
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.favoriteButton}
@@ -36,8 +37,8 @@ export default function ListingDetailScreen() {
           >
             <Heart 
               size={24} 
-              color={isFavorite ? '#EF4444' : '#000'}
-              fill={isFavorite ? '#EF4444' : 'transparent'}
+              color={isFavorite ? Colors.error : Colors.text.primary}
+              fill={isFavorite ? Colors.error : 'transparent'}
             />
           </TouchableOpacity>
         </View>
@@ -52,7 +53,7 @@ export default function ListingDetailScreen() {
           <Text style={styles.title}>{listing.title}</Text>
           
           <View style={styles.locationRow}>
-            <MapPin size={16} color="#666" />
+            <MapPin size={16} color={Colors.text.secondary} />
             <Text style={styles.location}>
               {listing.address.street}, {listing.address.city}
             </Text>
@@ -70,22 +71,22 @@ export default function ListingDetailScreen() {
 
           <View style={styles.features}>
             <View style={styles.feature}>
-              <Maximize size={20} color="#666" />
+              <Maximize size={20} color={Colors.text.secondary} />
               <Text style={styles.featureText}>{listing.surface} m²</Text>
             </View>
             {listing.rooms && (
               <View style={styles.feature}>
-                <Home size={20} color="#666" />
+                <Home size={20} color={Colors.text.secondary} />
                 <Text style={styles.featureText}>{listing.rooms} {t.listings.rooms.toLowerCase()}</Text>
               </View>
             )}
             <View style={styles.feature}>
-              <Bath size={20} color="#666" />
+              <Bath size={20} color={Colors.text.secondary} />
               <Text style={styles.featureText}>{listing.bathrooms} {t.listings.bathrooms.toLowerCase()}</Text>
             </View>
             {listing.floor && (
               <View style={styles.feature}>
-                <Building size={20} color="#666" />
+                <Building size={20} color={Colors.text.secondary} />
                 <Text style={styles.featureText}>Piano {listing.floor}</Text>
               </View>
             )}
@@ -101,25 +102,25 @@ export default function ListingDetailScreen() {
             <View style={styles.featuresList}>
               {listing.features.terrace && (
                 <View style={styles.featureItem}>
-                  <Check size={16} color="#10B981" />
+                  <Check size={16} color={Colors.success} />
                   <Text style={styles.featureItemText}>{t.listings.terrace}</Text>
                 </View>
               )}
               {listing.features.garden && (
                 <View style={styles.featureItem}>
-                  <Check size={16} color="#10B981" />
+                  <Check size={16} color={Colors.success} />
                   <Text style={styles.featureItemText}>{t.listings.garden}</Text>
                 </View>
               )}
               {listing.features.petsAllowed && (
                 <View style={styles.featureItem}>
-                  <Check size={16} color="#10B981" />
+                  <Check size={16} color={Colors.success} />
                   <Text style={styles.featureItemText}>{t.listings.petsAllowed}</Text>
                 </View>
               )}
               {listing.features.accessibleForDisabled && (
                 <View style={styles.featureItem}>
-                  <Check size={16} color="#10B981" />
+                  <Check size={16} color={Colors.success} />
                   <Text style={styles.featureItemText}>{t.listings.accessible}</Text>
                 </View>
               )}
@@ -129,7 +130,7 @@ export default function ListingDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Dettagli</Text>
             <View style={styles.detail}>
-              <Calendar size={16} color="#666" />
+              <Calendar size={16} color={Colors.text.secondary} />
               <Text style={styles.detailText}>
                 {listing.availabilityType === 'immediately' ? 'Disponibile da subito' : `Disponibile dal ${new Date(listing.availableFrom).toLocaleDateString()}`}
               </Text>
@@ -147,7 +148,7 @@ export default function ListingDetailScreen() {
             </View>
             {listing.yearlyAdjustment && (
               <View style={styles.detail}>
-                <Check size={16} color="#10B981" />
+                <Check size={16} color={Colors.success} />
                 <Text style={styles.detailText}>Conguaglio annuale</Text>
               </View>
             )}
@@ -166,7 +167,7 @@ export default function ListingDetailScreen() {
               <View style={styles.featuresList}>
                 {listing.accessibility.map((feature, index) => (
                   <View key={index} style={styles.featureItem}>
-                    <Check size={16} color="#10B981" />
+                    <Check size={16} color={Colors.success} />
                     <Text style={styles.featureItemText}>
                       {feature === 'elevator' ? 'Ascensore' :
                        feature === 'disabled_access' ? 'Accesso disabili' :
@@ -183,18 +184,18 @@ export default function ListingDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Deposito Cauzionale</Text>
             <View style={styles.detail}>
-              <Euro size={16} color="#666" />
+              <Euro size={16} color={Colors.text.secondary} />
               <Text style={styles.detailText}>€{listing.securityDeposit}</Text>
             </View>
             {listing.acceptsSwissCaution && (
               <View style={styles.detail}>
-                <Shield size={16} color="#10B981" />
+                <Shield size={16} color={Colors.success} />
                 <Text style={styles.detailText}>Accetta SwissCaution</Text>
               </View>
             )}
             {listing.acceptsOtherGuarantees && listing.guaranteeServices && (
               <View style={styles.detail}>
-                <Shield size={16} color="#10B981" />
+                <Shield size={16} color={Colors.success} />
                 <Text style={styles.detailText}>Servizi accettati: {listing.guaranteeServices}</Text>
               </View>
             )}
@@ -207,7 +208,7 @@ export default function ListingDetailScreen() {
           style={styles.contactButton}
           onPress={() => router.push(`/profile/${listing.userId}`)}
         >
-          <MessageCircle size={20} color="#FFF" />
+          <MessageCircle size={20} color={Colors.text.inverse} />
           <Text style={styles.contactButtonText}>{t.listings.contactOwner}</Text>
         </TouchableOpacity>
       </View>
@@ -218,7 +219,7 @@ export default function ListingDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: Colors.background.primary,
   },
   header: {
     position: 'absolute',
@@ -227,18 +228,18 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     zIndex: 10,
   },
   closeButton: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderRadius: 20,
-    padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: BorderRadius.full,
+    padding: Spacing.sm,
   },
   favoriteButton: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderRadius: 20,
-    padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: BorderRadius.full,
+    padding: Spacing.sm,
   },
   imageScroll: {
     height: 300,
@@ -248,121 +249,123 @@ const styles = StyleSheet.create({
     height: 300,
   },
   content: {
-    padding: 16,
+    padding: Spacing.lg,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 8,
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.text.primary,
+    marginBottom: Spacing.sm,
+    lineHeight: Typography.fontSize['2xl'] * Typography.lineHeight.tight,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginBottom: 16,
+    gap: Spacing.xs,
+    marginBottom: Spacing.lg,
   },
   location: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginBottom: 24,
+    marginBottom: Spacing['2xl'],
   },
   price: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#2563EB',
+    fontSize: Typography.fontSize['3xl'],
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.primary[600],
   },
   priceLabel: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
     marginLeft: 4,
   },
   expenses: {
-    fontSize: 14,
-    color: '#999',
-    marginLeft: 12,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.tertiary,
+    marginLeft: Spacing.md,
   },
   features: {
     flexDirection: 'row',
-    gap: 24,
-    paddingVertical: 16,
+    gap: Spacing['2xl'],
+    paddingVertical: Spacing.lg,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#E5E7EB',
-    marginBottom: 24,
+    borderColor: Colors.border.light,
+    marginBottom: Spacing['2xl'],
   },
   feature: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   featureText: {
-    fontSize: 14,
-    color: '#374151',
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.primary,
+    fontWeight: Typography.fontWeight.medium,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: Spacing['2xl'],
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 12,
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.text.primary,
+    marginBottom: Spacing.md,
   },
   description: {
-    fontSize: 15,
-    color: '#4B5563',
-    lineHeight: 22,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
+    lineHeight: Typography.fontSize.base * Typography.lineHeight.relaxed,
   },
   featuresList: {
-    gap: 12,
+    gap: Spacing.md,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   featureItemText: {
-    fontSize: 15,
-    color: '#374151',
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.primary,
   },
   detail: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
   },
   detailLabel: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+    fontWeight: Typography.fontWeight.medium,
   },
   detailText: {
-    fontSize: 14,
-    color: '#374151',
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.primary,
   },
   footer: {
-    padding: 16,
+    padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    backgroundColor: '#FFF',
+    borderTopColor: Colors.border.light,
+    backgroundColor: Colors.background.primary,
   },
   contactButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: Colors.primary[500],
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 8,
+    gap: Spacing.sm,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.lg,
   },
   contactButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
+    color: Colors.text.inverse,
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
   },
 });

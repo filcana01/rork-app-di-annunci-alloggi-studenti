@@ -6,6 +6,7 @@ import SearchBar from '@/components/SearchBar';
 import { mockListings } from '@/mocks/listings';
 import { useApp } from '@/hooks/use-app-context';
 import { router } from 'expo-router';
+import { Colors, Shadows, Typography, Spacing, BorderRadius } from '@/constants/colors';
 
 export default function HomeScreen() {
   const { t } = useApp();
@@ -26,9 +27,9 @@ export default function HomeScreen() {
           onPress={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
         >
           {viewMode === 'list' ? (
-            <Map size={20} color="#2563EB" />
+            <Map size={20} color={Colors.primary[500]} />
           ) : (
-            <List size={20} color="#2563EB" />
+            <List size={20} color={Colors.primary[500]} />
           )}
         </TouchableOpacity>
       </View>
@@ -58,37 +59,45 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.background.secondary,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFF',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.background.primary,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Colors.border.light,
+    ...Shadows.small,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.text.primary,
   },
   viewToggle: {
-    padding: 8,
+    padding: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background.tertiary,
   },
   listContent: {
-    paddingVertical: 8,
+    paddingVertical: Spacing.sm,
   },
   mapContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#E5E7EB',
+    backgroundColor: Colors.background.tertiary,
+    margin: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
   },
   mapPlaceholder: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
+    fontWeight: Typography.fontWeight.medium,
   },
 });
