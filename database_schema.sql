@@ -1,270 +1,356 @@
--- =============================================
--- Database Schema per Applicativo Annunci Alloggi Studenti
--- Sistema di autenticazione: Switch Edu-ID (esterno)
--- =============================================
+-- =====================================================
+-- Database Schema per Applicazione Annunci Alloggi
+-- Integrazione con Switch Edu-ID
+-- =====================================================
 
--- Tabella Utenti (dati base da Switch Edu-ID)
+CREATE DATABASE StudentHousingDB;
+GO
+
+USE StudentHousingDB;
+GO
+
+-- =====================================================
+-- TABELLA UTENTI (senza autenticazione locale)
+-- =====================================================
 CREATE TABLE Users (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    SwitchEduId NVARCHAR(255) NOT NULL UNIQUE, -- ID univoco da Switch Edu-ID
-    Email NVARCHAR(255) NOT NULL UNIQUE,
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    SwitchEduId NVARCHAR(255) UNIQUE NOT NULL, -- ID univoco da Switch Edu-ID
     FirstName NVARCHAR(100) NOT NULL,
     LastName NVARCHAR(100) NOT NULL,
-    PhoneNumber NVARCHAR(20),
-    CompanyName NVARCHAR(200), -- Facoltativo per agenzie
-    Address NVARCHAR(500),
-    UserType NVARCHAR(50) NOT NULL DEFAULT 'Student', -- Student, VerifiedStudent, KnownPerson, KnownCompany
-    IsActive BIT NOT NULL DEFAULT 1,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    UpdatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+    CompanyName NVARCHAR(200) NULL,
+    Email NVARCHAR(255) UNIQUE NOT NULL,
+    PhoneNumber NVARCHAR(20) NOT NULL,
+    Address NVARCHAR(500) NOT NULL,
+    UserType INT NOT NULL, -- 0=VerifiedStudent, 1=KnownPerson, 2=KnownCompany, 3=Admin
+    Badge NVARCHAR(50) NOT NULL, -- Badge che determina il ruolo
+    IsVerified BIT DEFAULT 0,
+    IsActive BIT DEFAULT 1,
+    PreferredLanguage NVARCHAR(5) DEFAULT 'it', -- 'it' o 'en'
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
+    UpdatedAt DATETIME2 DEFAULT GETDATE(),
+    LastLoginAt DATETIME2 NULL
 );
 
--- Tabella Annunci
+-- =====================================================
+-- TABELLA CATEGORIE
+-- =====================================================
+CREATE TABLE Categories (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    NameEn NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(500) NULL,
+    DescriptionEn NVARCHAR(500) NULL,
+    IsActive BIT DEFAULT 1,
+    CreatedAt DATETIME2 DEFAULT GETDATE()
+);
+
+-- =====================================================
+-- TABELLA ANNUNCI (con tutti i campi richiesti)
+-- =====================================================
 CREATE TABLE Listings (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    UserId UNIQUEIDENTIFIER NOT NULL,
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UserId INT NOT NULL,
+    CategoryId INT NOT NULL,
     Title NVARCHAR(200) NOT NULL,
-    Description NVARCHAR(MAX),
-    Category NVARCHAR(50) NOT NULL, -- Room, Apartment, Parking, Other
+    Description NVARCHAR(MAX) NOT NULL,
     
-    -- Indirizzo e posizione
-    Street NVARCHAR(200) NOT NULL,
+    -- Informazioni indirizzo e posizione
+    Address NVARCHAR(500) NOT NULL,
     PostalCode NVARCHAR(10) NOT NULL,
     City NVARCHAR(100) NOT NULL,
     Country NVARCHAR(100) NOT NULL DEFAULT 'Switzerland',
-    Latitude DECIMAL(10, 8),
-    Longitude DECIMAL(11, 8),
+    Latitude DECIMAL(10,8) NULL,
+    Longitude DECIMAL(11,8) NULL,
     
     -- Caratteristiche immobile
-    SurfaceArea INT, -- m²
-    NumberOfRooms INT, -- Solo per appartamenti
-    Floor NVARCHAR(20), -- Piano (es: "2", "PT", "Mansarda")
-    NumberOfBathrooms INT,
-    FurnishingStatus NVARCHAR(50), -- Furnished, PartiallyFurnished, Unfurnished
+    SurfaceArea INT NULL, -- m²
+    NumberOfRooms INT NULL, -- Solo per appartamenti
+    Floor INT NULL,
+    NumberOfBathrooms INT NULL,
+    FurnishingStatus INT NULL, -- 0=Non arredato, 1=Parzialmente arredato, 2=Arredato
+    
+    -- Informazioni economiche
+    MonthlyRent DECIMAL(10,2) NOT NULL,
+    ExpensesIncluded BIT DEFAULT 0,
+    MonthlyExpenses DECIMAL(10,2) NULL,
+    AnnualAdjustment BIT DEFAULT 0, -- Conguaglio annuale
+    SecurityDeposit DECIMAL(10,2) NULL,
+    AcceptsSwissCaution BIT DEFAULT 0,
+    AcceptsOtherGuarantees BIT DEFAULT 0,
+    GuaranteeServices NVARCHAR(500) NULL, -- Altri servizi di garanzia accettati
     
     -- Caratteristiche aggiuntive
-    HasTerrace BIT NOT NULL DEFAULT 0,
-    HasGarden BIT NOT NULL DEFAULT 0,
-    PetsAllowed BIT NOT NULL DEFAULT 0,
-    HasElevator BIT NOT NULL DEFAULT 0,
-    DisabilityAccessible BIT NOT NULL DEFAULT 0,
-    
-    -- Aspetti economici
-    MonthlyRent DECIMAL(10, 2) NOT NULL,
-    ExpensesIncluded BIT NOT NULL DEFAULT 0,
-    MonthlyExpenses DECIMAL(10, 2), -- Se spese escluse
-    AnnualAdjustment BIT NOT NULL DEFAULT 0, -- Conguaglio annuale
-    SecurityDeposit DECIMAL(10, 2),
-    AcceptsSwissCaution BIT NOT NULL DEFAULT 0,
+    HasTerrace BIT DEFAULT 0,
+    HasGarden BIT DEFAULT 0,
+    PetsAllowed BIT DEFAULT 0,
+    HasElevator BIT DEFAULT 0,
+    DisabilityAccessible BIT DEFAULT 0,
     
     -- Disponibilità e contratto
-    AvailableFrom DATETIME2, -- NULL = da subito
-    MinimumContractDuration NVARCHAR(50), -- es: "6 months", "1 year"
-    Rules NVARCHAR(1000), -- Regole specifiche
+    AvailabilityDate DATE NOT NULL,
+    IsAvailableImmediately BIT DEFAULT 1,
+    MinContractDuration INT NULL, -- mesi
+    MaxContractDuration INT NULL, -- mesi (opzionale)
     
-    -- Stato annuncio
-    Status NVARCHAR(50) NOT NULL DEFAULT 'Draft', -- Draft, Active, Expired, Archived
-    IsVerified BIT NOT NULL DEFAULT 0,
+    -- Regole e accessibilità
+    Rules NVARCHAR(MAX) NULL, -- No fumatori, no animali, etc.
+    AccessibilityFeatures NVARCHAR(MAX) NULL, -- Ascensore, accesso disabili, etc.
     
-    -- Metadati
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    UpdatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    PublishedAt DATETIME2,
-    ExpiresAt DATETIME2,
+    -- Vicinanza università/centri ricerca
+    NearbyUniversities NVARCHAR(MAX) NULL, -- JSON array con università vicine
+    DistanceToUSI DECIMAL(5,2) NULL, -- km
+    DistanceToSUPSI DECIMAL(5,2) NULL, -- km
     
-    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
+    -- Stato e gestione
+    Status INT DEFAULT 0, -- 0=Bozza, 1=Attivo, 2=Scaduto, 3=Archiviato, 4=In verifica
+    IsVerified BIT DEFAULT 0,
+    VerifiedAt DATETIME2 NULL,
+    VerifiedBy INT NULL, -- UserId dell'admin che ha verificato
+    ExpirationDate DATE NULL,
+    ViewCount INT DEFAULT 0,
+    ContactCount INT DEFAULT 0,
+    
+    -- Timestamp
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
+    UpdatedAt DATETIME2 DEFAULT GETDATE(),
+    PublishedAt DATETIME2 NULL,
+    
+    FOREIGN KEY (UserId) REFERENCES Users(Id),
+    FOREIGN KEY (CategoryId) REFERENCES Categories(Id),
+    FOREIGN KEY (VerifiedBy) REFERENCES Users(Id)
 );
 
--- Tabella Immagini Annunci
+-- =====================================================
+-- TABELLA IMMAGINI ANNUNCI
+-- =====================================================
 CREATE TABLE ListingImages (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    ListingId UNIQUEIDENTIFIER NOT NULL,
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    ListingId INT NOT NULL,
     ImageUrl NVARCHAR(500) NOT NULL,
-    ImageOrder INT NOT NULL DEFAULT 0,
-    Caption NVARCHAR(200),
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    
+    ImagePath NVARCHAR(500) NULL, -- Path locale se salvate su server
+    IsPrimary BIT DEFAULT 0,
+    OrderIndex INT DEFAULT 0,
+    Caption NVARCHAR(200) NULL,
+    AltText NVARCHAR(200) NULL, -- Per accessibilità
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
     FOREIGN KEY (ListingId) REFERENCES Listings(Id) ON DELETE CASCADE
 );
 
--- Tabella Preferiti
+-- =====================================================
+-- TABELLA PREFERITI
+-- =====================================================
 CREATE TABLE Favorites (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    UserId UNIQUEIDENTIFIER NOT NULL,
-    ListingId UNIQUEIDENTIFIER NOT NULL,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    
-    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE,
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UserId INT NOT NULL,
+    ListingId INT NOT NULL,
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
+    FOREIGN KEY (UserId) REFERENCES Users(Id),
     FOREIGN KEY (ListingId) REFERENCES Listings(Id) ON DELETE CASCADE,
-    
-    -- Constraint per evitare duplicati
-    CONSTRAINT UK_Favorites_User_Listing UNIQUE (UserId, ListingId)
+    UNIQUE(UserId, ListingId)
 );
 
--- Tabella Messaggi
+-- =====================================================
+-- TABELLA MESSAGGI (sistema messaggistica interna)
+-- =====================================================
 CREATE TABLE Messages (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    SenderId UNIQUEIDENTIFIER NOT NULL,
-    ReceiverId UNIQUEIDENTIFIER NOT NULL,
-    ListingId UNIQUEIDENTIFIER, -- Riferimento all'annuncio (opzionale)
-    Subject NVARCHAR(200),
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    SenderId INT NOT NULL,
+    ReceiverId INT NOT NULL,
+    ListingId INT NULL, -- Messaggio relativo a un annuncio specifico
+    ConversationId NVARCHAR(100) NULL, -- Per raggruppare messaggi della stessa conversazione
+    Subject NVARCHAR(200) NOT NULL,
     Content NVARCHAR(MAX) NOT NULL,
-    IsRead BIT NOT NULL DEFAULT 0,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    
+    IsRead BIT DEFAULT 0,
+    ReadAt DATETIME2 NULL,
+    MessageType INT DEFAULT 0, -- 0=Standard, 1=System, 2=Notification
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
     FOREIGN KEY (SenderId) REFERENCES Users(Id),
     FOREIGN KEY (ReceiverId) REFERENCES Users(Id),
-    FOREIGN KEY (ListingId) REFERENCES Listings(Id) ON DELETE SET NULL
+    FOREIGN KEY (ListingId) REFERENCES Listings(Id)
 );
 
--- Tabella Ricerche Salvate
+-- =====================================================
+-- TABELLA RICERCHE SALVATE
+-- =====================================================
 CREATE TABLE SavedSearches (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    UserId UNIQUEIDENTIFIER NOT NULL,
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UserId INT NOT NULL,
     SearchName NVARCHAR(100) NOT NULL,
     SearchCriteria NVARCHAR(MAX) NOT NULL, -- JSON con i filtri di ricerca
-    NotificationsEnabled BIT NOT NULL DEFAULT 1,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    UpdatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    
-    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
+    NotificationsEnabled BIT DEFAULT 1,
+    LastNotificationSent DATETIME2 NULL,
+    ResultCount INT DEFAULT 0, -- Numero risultati ultima esecuzione
+    IsActive BIT DEFAULT 1,
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
+    UpdatedAt DATETIME2 DEFAULT GETDATE(),
+    FOREIGN KEY (UserId) REFERENCES Users(Id)
 );
 
--- =============================================
--- INDICI PER OTTIMIZZAZIONE PERFORMANCE
--- =============================================
+-- =====================================================
+-- TABELLA NOTIFICHE
+-- =====================================================
+CREATE TABLE Notifications (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UserId INT NOT NULL,
+    Type INT NOT NULL, -- 0=NewMessage, 1=ListingExpiring, 2=NewMatchingListing, 3=ListingVerified
+    Title NVARCHAR(200) NOT NULL,
+    Content NVARCHAR(MAX) NOT NULL,
+    RelatedListingId INT NULL,
+    RelatedMessageId INT NULL,
+    IsRead BIT DEFAULT 0,
+    ReadAt DATETIME2 NULL,
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
+    FOREIGN KEY (UserId) REFERENCES Users(Id),
+    FOREIGN KEY (RelatedListingId) REFERENCES Listings(Id),
+    FOREIGN KEY (RelatedMessageId) REFERENCES Messages(Id)
+);
 
--- Indici per ricerche frequenti
-CREATE INDEX IX_Listings_Status_Category ON Listings(Status, Category);
-CREATE INDEX IX_Listings_City_PostalCode ON Listings(City, PostalCode);
-CREATE INDEX IX_Listings_MonthlyRent ON Listings(MonthlyRent);
-CREATE INDEX IX_Listings_AvailableFrom ON Listings(AvailableFrom);
-CREATE INDEX IX_Listings_CreatedAt ON Listings(CreatedAt DESC);
+-- =====================================================
+-- TABELLA LOG ATTIVITÀ (per audit e statistiche)
+-- =====================================================
+CREATE TABLE ActivityLogs (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UserId INT NULL,
+    Action NVARCHAR(100) NOT NULL, -- 'CREATE_LISTING', 'VIEW_LISTING', 'SEND_MESSAGE', etc.
+    EntityType NVARCHAR(50) NOT NULL, -- 'Listing', 'Message', 'User', etc.
+    EntityId INT NULL,
+    Details NVARCHAR(MAX) NULL, -- JSON con dettagli aggiuntivi
+    IpAddress NVARCHAR(45) NULL,
+    UserAgent NVARCHAR(500) NULL,
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
+    FOREIGN KEY (UserId) REFERENCES Users(Id)
+);
+
+-- =====================================================
+-- INSERIMENTO DATI INIZIALI
+-- =====================================================
+
+-- Categorie base
+INSERT INTO Categories (Name, NameEn, Description, DescriptionEn) VALUES 
+('Camera', 'Room', 'Camera singola o condivisa', 'Single or shared room'),
+('Appartamento', 'Apartment', 'Appartamento completo', 'Complete apartment'),
+('Parcheggio', 'Parking', 'Posto auto o garage', 'Parking space or garage'),
+('Monolocale', 'Studio', 'Monolocale o studio', 'Studio apartment'),
+('Posto letto', 'Bed', 'Posto letto in camera condivisa', 'Bed in shared room');
+
+-- =====================================================
+-- INDICI PER PERFORMANCE
+-- =====================================================
+
+-- Indici principali per ricerche
+CREATE INDEX IX_Listings_Status_Category ON Listings(Status, CategoryId);
+CREATE INDEX IX_Listings_City_Status ON Listings(City, Status);
+CREATE INDEX IX_Listings_Rent_Status ON Listings(MonthlyRent, Status);
+CREATE INDEX IX_Listings_Availability ON Listings(AvailabilityDate, Status);
+CREATE INDEX IX_Listings_Location ON Listings(Latitude, Longitude);
 CREATE INDEX IX_Listings_UserId ON Listings(UserId);
 
--- Indici per geolocalizzazione
-CREATE INDEX IX_Listings_Location ON Listings(Latitude, Longitude);
-
--- Indici per messaggistica
+-- Indici per messaggi
 CREATE INDEX IX_Messages_Receiver_Read ON Messages(ReceiverId, IsRead);
-CREATE INDEX IX_Messages_Sender ON Messages(SenderId);
-CREATE INDEX IX_Messages_CreatedAt ON Messages(CreatedAt DESC);
+CREATE INDEX IX_Messages_Conversation ON Messages(ConversationId, CreatedAt);
+CREATE INDEX IX_Messages_Listing ON Messages(ListingId);
+
+-- Indici per notifiche
+CREATE INDEX IX_Notifications_User_Read ON Notifications(UserId, IsRead);
+CREATE INDEX IX_Notifications_Type ON Notifications(Type, CreatedAt);
 
 -- Indici per preferiti
-CREATE INDEX IX_Favorites_UserId ON Favorites(UserId);
+CREATE INDEX IX_Favorites_User ON Favorites(UserId);
 
--- Indici per immagini
-CREATE INDEX IX_ListingImages_ListingId_Order ON ListingImages(ListingId, ImageOrder);
+-- Indici per ricerche salvate
+CREATE INDEX IX_SavedSearches_User_Active ON SavedSearches(UserId, IsActive);
 
--- =============================================
--- TRIGGER PER AGGIORNAMENTO AUTOMATICO UpdatedAt
--- =============================================
+-- Indici per log attività
+CREATE INDEX IX_ActivityLogs_User_Date ON ActivityLogs(UserId, CreatedAt);
+CREATE INDEX IX_ActivityLogs_Action ON ActivityLogs(Action, CreatedAt);
 
--- Trigger per Users
-CREATE TRIGGER TR_Users_UpdatedAt
-ON Users
-AFTER UPDATE
-AS
-BEGIN
-    UPDATE Users 
-    SET UpdatedAt = GETUTCDATE()
-    FROM Users u
-    INNER JOIN inserted i ON u.Id = i.Id;
-END;
+-- Indici per utenti
+CREATE INDEX IX_Users_SwitchEduId ON Users(SwitchEduId);
+CREATE INDEX IX_Users_Email ON Users(Email);
+CREATE INDEX IX_Users_Type ON Users(UserType);
 
--- Trigger per Listings
-CREATE TRIGGER TR_Listings_UpdatedAt
-ON Listings
-AFTER UPDATE
+-- =====================================================
+-- VISTE UTILI
+-- =====================================================
+
+-- Vista per annunci attivi con informazioni utente
+CREATE VIEW ActiveListingsView AS
+SELECT 
+    l.*,
+    u.FirstName + ' ' + u.LastName AS OwnerName,
+    u.CompanyName,
+    u.Badge AS OwnerBadge,
+    u.PhoneNumber AS OwnerPhone,
+    u.Email AS OwnerEmail,
+    c.Name AS CategoryName,
+    c.NameEn AS CategoryNameEn,
+    (SELECT COUNT(*) FROM Favorites f WHERE f.ListingId = l.Id) AS FavoriteCount,
+    (SELECT TOP 1 ImageUrl FROM ListingImages li WHERE li.ListingId = l.Id AND li.IsPrimary = 1) AS PrimaryImageUrl
+FROM Listings l
+INNER JOIN Users u ON l.UserId = u.Id
+INNER JOIN Categories c ON l.CategoryId = c.Id
+WHERE l.Status = 1 AND l.IsVerified = 1;
+
+-- Vista per statistiche utente
+CREATE VIEW UserStatsView AS
+SELECT 
+    u.Id,
+    u.FirstName + ' ' + u.LastName AS FullName,
+    u.Badge,
+    COUNT(l.Id) AS TotalListings,
+    COUNT(CASE WHEN l.Status = 1 THEN 1 END) AS ActiveListings,
+    COUNT(CASE WHEN l.Status = 0 THEN 1 END) AS DraftListings,
+    SUM(l.ViewCount) AS TotalViews,
+    SUM(l.ContactCount) AS TotalContacts,
+    (SELECT COUNT(*) FROM Messages m WHERE m.ReceiverId = u.Id AND m.IsRead = 0) AS UnreadMessages
+FROM Users u
+LEFT JOIN Listings l ON u.Id = l.UserId
+GROUP BY u.Id, u.FirstName, u.LastName, u.Badge;
+
+GO
+
+-- =====================================================
+-- STORED PROCEDURES UTILI
+-- =====================================================
+
+-- Procedura per aggiornare il contatore visualizzazioni
+CREATE PROCEDURE UpdateListingViewCount
+    @ListingId INT
 AS
 BEGIN
     UPDATE Listings 
-    SET UpdatedAt = GETUTCDATE()
-    FROM Listings l
-    INNER JOIN inserted i ON l.Id = i.Id;
+    SET ViewCount = ViewCount + 1,
+        UpdatedAt = GETDATE()
+    WHERE Id = @ListingId;
 END;
+GO
 
--- Trigger per SavedSearches
-CREATE TRIGGER TR_SavedSearches_UpdatedAt
-ON SavedSearches
-AFTER UPDATE
+-- Procedura per aggiornare il contatore contatti
+CREATE PROCEDURE UpdateListingContactCount
+    @ListingId INT
 AS
 BEGIN
-    UPDATE SavedSearches 
-    SET UpdatedAt = GETUTCDATE()
-    FROM SavedSearches s
-    INNER JOIN inserted i ON s.Id = i.Id;
+    UPDATE Listings 
+    SET ContactCount = ContactCount + 1,
+        UpdatedAt = GETDATE()
+    WHERE Id = @ListingId;
 END;
+GO
 
--- =============================================
--- DATI DI ESEMPIO (OPZIONALE)
--- =============================================
-
--- Inserimento utente di esempio
-INSERT INTO Users (SwitchEduId, Email, FirstName, LastName, PhoneNumber, UserType)
-VALUES 
-('edu-id-001', 'mario.rossi@usi.ch', 'Mario', 'Rossi', '+41791234567', 'VerifiedStudent'),
-('edu-id-002', 'anna.bianchi@usi.ch', 'Anna', 'Bianchi', '+41797654321', 'Student');
-
--- =============================================
--- STORED PROCEDURES UTILI (OPZIONALE)
--- =============================================
-
--- Procedura per ottenere annunci con filtri
-CREATE PROCEDURE GetListingsWithFilters
-    @Category NVARCHAR(50) = NULL,
-    @City NVARCHAR(100) = NULL,
-    @MinRent DECIMAL(10,2) = NULL,
-    @MaxRent DECIMAL(10,2) = NULL,
-    @MinRooms INT = NULL,
-    @PetsAllowed BIT = NULL,
-    @PageNumber INT = 1,
-    @PageSize INT = 20
+-- Procedura per archiviare annunci scaduti
+CREATE PROCEDURE ArchiveExpiredListings
 AS
 BEGIN
-    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
-    
-    SELECT 
-        l.*,
-        u.FirstName + ' ' + u.LastName AS OwnerName,
-        u.Email AS OwnerEmail,
-        u.PhoneNumber AS OwnerPhone,
-        (SELECT TOP 1 ImageUrl FROM ListingImages WHERE ListingId = l.Id ORDER BY ImageOrder) AS MainImage,
-        (SELECT COUNT(*) FROM ListingImages WHERE ListingId = l.Id) AS ImageCount
-    FROM Listings l
-    INNER JOIN Users u ON l.UserId = u.Id
-    WHERE l.Status = 'Active'
-        AND l.IsVerified = 1
-        AND (@Category IS NULL OR l.Category = @Category)
-        AND (@City IS NULL OR l.City LIKE '%' + @City + '%')
-        AND (@MinRent IS NULL OR l.MonthlyRent >= @MinRent)
-        AND (@MaxRent IS NULL OR l.MonthlyRent <= @MaxRent)
-        AND (@MinRooms IS NULL OR l.NumberOfRooms >= @MinRooms)
-        AND (@PetsAllowed IS NULL OR l.PetsAllowed = @PetsAllowed)
-    ORDER BY l.CreatedAt DESC
-    OFFSET @Offset ROWS
-    FETCH NEXT @PageSize ROWS ONLY;
+    UPDATE Listings 
+    SET Status = 2, -- Scaduto
+        UpdatedAt = GETDATE()
+    WHERE Status = 1 
+    AND ExpirationDate IS NOT NULL 
+    AND ExpirationDate < GETDATE();
 END;
+GO
 
--- Procedura per ottenere dettagli completi annuncio
-CREATE PROCEDURE GetListingDetails
-    @ListingId UNIQUEIDENTIFIER
-AS
-BEGIN
-    -- Dettagli annuncio
-    SELECT 
-        l.*,
-        u.FirstName + ' ' + u.LastName AS OwnerName,
-        u.Email AS OwnerEmail,
-        u.PhoneNumber AS OwnerPhone,
-        u.UserType AS OwnerType
-    FROM Listings l
-    INNER JOIN Users u ON l.UserId = u.Id
-    WHERE l.Id = @ListingId;
-    
-    -- Immagini annuncio
-    SELECT ImageUrl, Caption
-    FROM ListingImages
-    WHERE ListingId = @ListingId
-    ORDER BY ImageOrder;
-END;
+PRINT 'Database schema creato con successo!';
+PRINT 'Tabelle create: Users, Categories, Listings, ListingImages, Favorites, Messages, SavedSearches, Notifications, ActivityLogs';
+PRINT 'Viste create: ActiveListingsView, UserStatsView';
+PRINT 'Stored Procedures create: UpdateListingViewCount, UpdateListingContactCount, ArchiveExpiredListings';
