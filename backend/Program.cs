@@ -4,12 +4,32 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using StudentHousingAPI.Data;
 using StudentHousingAPI.Services;
+using StudentHousingAPI.GraphQL;
+using StudentHousingAPI.GraphQL.Types;
+using StudentHousingAPI.GraphQL.Queries;
+using StudentHousingAPI.GraphQL.Mutations;
 using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// GraphQL
+builder.Services
+    .AddGraphQLServer()
+    .AddQueryType<Query>()
+    .AddMutationType<Mutation>()
+    .AddType<UserType>()
+    .AddType<ListingType>()
+    .AddType<CategoryType>()
+    .AddType<MessageType>()
+    .AddType<FavoriteType>()
+    .AddType<ListingImageType>()
+    .AddType<AuthPayloadType>()
+    .AddFiltering()
+    .AddSorting()
+    .AddProjections();
 
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -20,6 +40,7 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 // Services
 builder.Services.AddScoped<IListingService, ListingService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -76,5 +97,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// GraphQL endpoint
+app.MapGraphQL("/graphql");
 
 app.Run();
