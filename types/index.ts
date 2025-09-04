@@ -84,3 +84,5 @@ export interface Message {
   read: boolean;
   createdAt: Date;
 }
+
+export type CreateListingData = Omit<Listing, 'id' | 'createdAt' | 'updatedAt' | 'status'>;
