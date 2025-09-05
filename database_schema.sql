@@ -1,336 +1,304 @@
--- =====================================================
--- SCRIPT CREAZIONE DATABASE - PIATTAFORMA ALLOGGI STUDENTI
--- =====================================================
--- Compatibile con SQL Server / PostgreSQL
--- Creato per integrazione con backend .NET
--- =====================================================
+-- ============================================================================
+-- SCRIPT DI CREAZIONE DATABASE PER APPLICATIVO ANNUNCI ALLOGGI STUDENTI
+-- Versione: 1.0
+-- Data: 2025-01-05
+-- Descrizione: Schema completo per piattaforma ricerca/pubblicazione alloggi
+-- ============================================================================
 
--- Tabella Utenti
--- Gestisce gli utenti registrati tramite Switch Edu-ID
+-- Creazione del database (opzionale, decommentare se necessario)
+-- CREATE DATABASE StudentHousingApp;
+-- USE StudentHousingApp;
+
+-- ============================================================================
+-- TABELLE PRINCIPALI
+-- ============================================================================
+
+-- Tabella Categorie
+CREATE TABLE Categorie (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Nome NVARCHAR(50) NOT NULL UNIQUE,
+    Descrizione NVARCHAR(255),
+    Icona NVARCHAR(100), -- Nome dell'icona per l'UI
+    Attiva BIT NOT NULL DEFAULT 1,
+    DataCreazione DATETIME2 NOT NULL DEFAULT GETDATE(),
+    DataModifica DATETIME2 NOT NULL DEFAULT GETDATE()
+);
+
+-- Tabella Utenti (senza autenticazione, gestita da Switch Edu-ID)
 CREATE TABLE Utenti (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    SwitchEduId NVARCHAR(255) NOT NULL UNIQUE, -- ID proveniente da Switch Edu-ID
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    SwitchEduId NVARCHAR(255) NOT NULL UNIQUE, -- ID univoco da Switch Edu-ID
     Nome NVARCHAR(100) NOT NULL,
     Cognome NVARCHAR(100) NOT NULL,
     Email NVARCHAR(255) NOT NULL UNIQUE,
     Telefono NVARCHAR(20),
-    NomeAzienda NVARCHAR(200), -- Facoltativo per agenzie
-    Indirizzo NVARCHAR(500),
+    NomeAzienda NVARCHAR(255), -- Facoltativo per agenzie
+    
+    -- Indirizzo utente
+    Via NVARCHAR(255),
     CAP NVARCHAR(10),
     Citta NVARCHAR(100),
     Nazione NVARCHAR(100) DEFAULT 'Svizzera',
     
-    -- Badge/Classificazione utente
+    -- Classificazione utente
     TipoUtente NVARCHAR(50) NOT NULL DEFAULT 'Studente', -- Studente, StudenteVerificato, PersonaConosciuta, AziendaConosciuta
+    Badge NVARCHAR(100), -- Badge assegnato dall'amministrazione
+    
+    -- Preferenze
+    Lingua NVARCHAR(5) DEFAULT 'it', -- it, en
+    NotificheEmail BIT DEFAULT 1,
+    NotifichePush BIT DEFAULT 1,
     
     -- Metadati
-    DataRegistrazione DATETIME2 NOT NULL DEFAULT GETDATE(),
-    UltimoAccesso DATETIME2,
     Attivo BIT NOT NULL DEFAULT 1,
-    
-    -- Indici
-    INDEX IX_Utenti_Email (Email),
-    INDEX IX_Utenti_SwitchEduId (SwitchEduId),
-    INDEX IX_Utenti_TipoUtente (TipoUtente)
+    DataRegistrazione DATETIME2 NOT NULL DEFAULT GETDATE(),
+    DataUltimoAccesso DATETIME2,
+    DataModifica DATETIME2 NOT NULL DEFAULT GETDATE()
 );
 
 -- Tabella Annunci
--- Gestisce tutti gli annunci di alloggi
 CREATE TABLE Annunci (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    UtenteId UNIQUEIDENTIFIER NOT NULL,
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UtenteId INT NOT NULL,
+    CategoriaId INT NOT NULL,
     
     -- Informazioni base
-    Titolo NVARCHAR(200) NOT NULL,
+    Titolo NVARCHAR(255) NOT NULL,
     Descrizione NTEXT,
-    Categoria NVARCHAR(50) NOT NULL, -- Camera, Appartamento, Parcheggio
     
-    -- Localizzazione
-    Indirizzo NVARCHAR(500) NOT NULL,
+    -- Indirizzo e posizione
+    Via NVARCHAR(255) NOT NULL,
     CAP NVARCHAR(10) NOT NULL,
     Citta NVARCHAR(100) NOT NULL,
     Nazione NVARCHAR(100) NOT NULL DEFAULT 'Svizzera',
-    Latitudine DECIMAL(10, 8),
-    Longitudine DECIMAL(11, 8),
+    Latitudine DECIMAL(10,8), -- Per mappa
+    Longitudine DECIMAL(11,8), -- Per mappa
     
     -- Caratteristiche immobile
-    Superficie DECIMAL(8, 2), -- m²
+    Superficie DECIMAL(8,2), -- m²
     NumeroLocali INT, -- Per appartamenti
     Piano NVARCHAR(20), -- Piano (es: "2", "PT", "Mansarda")
     NumeroBagni INT,
+    
+    -- Stato arredamento
     StatoArredamento NVARCHAR(50), -- Arredato, ParzialmenteArredato, NonArredato
     
     -- Caratteristiche aggiuntive (flags)
-    HasTerrazza BIT NOT NULL DEFAULT 0,
-    HasGiardino BIT NOT NULL DEFAULT 0,
-    AnimaliAmmessi BIT NOT NULL DEFAULT 0,
-    HasAscensore BIT NOT NULL DEFAULT 0,
-    AccessoDisabili BIT NOT NULL DEFAULT 0,
+    HasTerrazza BIT DEFAULT 0,
+    HasGiardino BIT DEFAULT 0,
+    AnimaliAmmessi BIT DEFAULT 0,
+    HasAscensore BIT DEFAULT 0,
+    AccessoDisabili BIT DEFAULT 0,
     
     -- Informazioni economiche
-    PigioneMensile DECIMAL(10, 2) NOT NULL,
-    SpeseIncluse BIT NOT NULL DEFAULT 0,
-    ImportoSpeseMensili DECIMAL(10, 2), -- Se spese escluse
-    ConguaglioAnnuale BIT NOT NULL DEFAULT 0,
-    DepositoCauzionale DECIMAL(10, 2),
-    AccettaSwissCaution BIT NOT NULL DEFAULT 0,
+    PrezzoMensile DECIMAL(10,2) NOT NULL,
+    SpeseIncluse BIT DEFAULT 0,
+    ImportoSpeseMensili DECIMAL(10,2), -- Se spese escluse
+    ConguaglioAnnuale BIT DEFAULT 0,
+    DepositoCauzionale DECIMAL(10,2),
+    AccettaSwissCaution BIT DEFAULT 0,
+    AccettaGaranzieAlternative BIT DEFAULT 0,
     
-    -- Condizioni contratto
+    -- Disponibilità e contratto
     DataDisponibilita DATE,
-    DisponibilitaImmediata BIT NOT NULL DEFAULT 1,
+    DisponibilitaDaSubito BIT DEFAULT 1,
     DurataMinimaContratto INT, -- Mesi
-    Regole NTEXT, -- Regole specifiche (no fumatori, etc.)
+    
+    -- Regole e note
+    Regole NTEXT, -- No fumatori, no animali, etc.
+    NoteAccessibilita NTEXT,
     
     -- Stato annuncio
-    Stato NVARCHAR(50) NOT NULL DEFAULT 'Bozza', -- Bozza, InVerifica, Attivo, Scaduto, Archiviato
-    DataCreazione DATETIME2 NOT NULL DEFAULT GETDATE(),
-    DataModifica DATETIME2 NOT NULL DEFAULT GETDATE(),
-    DataPubblicazione DATETIME2,
-    DataScadenza DATETIME2,
+    Stato NVARCHAR(50) NOT NULL DEFAULT 'Bozza', -- Bozza, InVerifica, Attivo, Scaduto, Archiviato, Rifiutato
+    MotivoRifiuto NTEXT,
     
     -- Metadati
-    VisualizzazioniTotali INT NOT NULL DEFAULT 0,
-    Attivo BIT NOT NULL DEFAULT 1,
+    DataCreazione DATETIME2 NOT NULL DEFAULT GETDATE(),
+    DataPubblicazione DATETIME2,
+    DataScadenza DATETIME2,
+    DataModifica DATETIME2 NOT NULL DEFAULT GETDATE(),
+    VerificatoDa INT, -- UtenteId dell'amministratore che ha verificato
+    DataVerifica DATETIME2,
     
-    -- Chiavi esterne
-    FOREIGN KEY (UtenteId) REFERENCES Utenti(Id) ON DELETE CASCADE,
+    -- Statistiche
+    Visualizzazioni INT DEFAULT 0,
+    ContattiRicevuti INT DEFAULT 0,
     
-    -- Indici
-    INDEX IX_Annunci_UtenteId (UtenteId),
-    INDEX IX_Annunci_Categoria (Categoria),
-    INDEX IX_Annunci_Stato (Stato),
-    INDEX IX_Annunci_Citta (Citta),
-    INDEX IX_Annunci_PigioneMensile (PigioneMensile),
-    INDEX IX_Annunci_DataPubblicazione (DataPubblicazione),
-    INDEX IX_Annunci_Location (Latitudine, Longitudine)
+    CONSTRAINT FK_Annunci_Utenti FOREIGN KEY (UtenteId) REFERENCES Utenti(Id),
+    CONSTRAINT FK_Annunci_Categorie FOREIGN KEY (CategoriaId) REFERENCES Categorie(Id),
+    CONSTRAINT FK_Annunci_Verificatore FOREIGN KEY (VerificatoDa) REFERENCES Utenti(Id)
 );
 
 -- Tabella Immagini
--- Gestisce le immagini associate agli annunci
 CREATE TABLE Immagini (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    AnnuncioId UNIQUEIDENTIFIER NOT NULL,
-    
-    -- Informazioni immagine
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    AnnuncioId INT NOT NULL,
     NomeFile NVARCHAR(255) NOT NULL,
-    PercorsoFile NVARCHAR(500) NOT NULL, -- Path relativo o URL
-    UrlImmagine NVARCHAR(1000), -- URL completo per accesso diretto
-    
-    -- Metadati
+    PercorsoFile NVARCHAR(500) NOT NULL,
+    UrlImmagine NVARCHAR(500), -- URL pubblico dell'immagine
+    AltText NVARCHAR(255), -- Per accessibilità
     Ordine INT NOT NULL DEFAULT 0, -- Ordine di visualizzazione
-    IsPrincipale BIT NOT NULL DEFAULT 0, -- Immagine principale dell'annuncio
+    IsPrincipale BIT DEFAULT 0, -- Immagine principale dell'annuncio
     DimensioneFile BIGINT, -- Dimensione in bytes
     TipoMime NVARCHAR(100),
-    
-    -- Timestamp
     DataCaricamento DATETIME2 NOT NULL DEFAULT GETDATE(),
     
-    -- Chiavi esterne
-    FOREIGN KEY (AnnuncioId) REFERENCES Annunci(Id) ON DELETE CASCADE,
-    
-    -- Indici
-    INDEX IX_Immagini_AnnuncioId (AnnuncioId),
-    INDEX IX_Immagini_Ordine (AnnuncioId, Ordine)
+    CONSTRAINT FK_Immagini_Annunci FOREIGN KEY (AnnuncioId) REFERENCES Annunci(Id) ON DELETE CASCADE
 );
 
 -- Tabella Preferiti
--- Gestisce gli annunci salvati come preferiti dagli utenti
 CREATE TABLE Preferiti (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    UtenteId UNIQUEIDENTIFIER NOT NULL,
-    AnnuncioId UNIQUEIDENTIFIER NOT NULL,
-    
-    -- Metadati
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UtenteId INT NOT NULL,
+    AnnuncioId INT NOT NULL,
     DataAggiunta DATETIME2 NOT NULL DEFAULT GETDATE(),
     Note NVARCHAR(500), -- Note personali dell'utente
     
-    -- Chiavi esterne
-    FOREIGN KEY (UtenteId) REFERENCES Utenti(Id) ON DELETE CASCADE,
-    FOREIGN KEY (AnnuncioId) REFERENCES Annunci(Id) ON DELETE CASCADE,
-    
-    -- Vincoli
-    UNIQUE (UtenteId, AnnuncioId), -- Un utente può salvare un annuncio solo una volta
-    
-    -- Indici
-    INDEX IX_Preferiti_UtenteId (UtenteId),
-    INDEX IX_Preferiti_AnnuncioId (AnnuncioId)
+    CONSTRAINT FK_Preferiti_Utenti FOREIGN KEY (UtenteId) REFERENCES Utenti(Id),
+    CONSTRAINT FK_Preferiti_Annunci FOREIGN KEY (AnnuncioId) REFERENCES Annunci(Id) ON DELETE CASCADE,
+    CONSTRAINT UK_Preferiti_Utente_Annuncio UNIQUE (UtenteId, AnnuncioId)
 );
 
 -- Tabella Messaggi
--- Sistema di messaggistica tra utenti
 CREATE TABLE Messaggi (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    
-    -- Partecipanti conversazione
-    MittenteId UNIQUEIDENTIFIER NOT NULL,
-    DestinatarioId UNIQUEIDENTIFIER NOT NULL,
-    AnnuncioId UNIQUEIDENTIFIER, -- Annuncio di riferimento (opzionale)
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    AnnuncioId INT NOT NULL,
+    MittentId INT NOT NULL, -- Chi invia il messaggio
+    DestinatarioId INT NOT NULL, -- Proprietario dell'annuncio
     
     -- Contenuto messaggio
-    Oggetto NVARCHAR(200),
-    Contenuto NTEXT NOT NULL,
+    Oggetto NVARCHAR(255),
+    Testo NTEXT NOT NULL,
     
     -- Stato messaggio
-    Letto BIT NOT NULL DEFAULT 0,
-    DataInvio DATETIME2 NOT NULL DEFAULT GETDATE(),
+    Letto BIT DEFAULT 0,
     DataLettura DATETIME2,
+    Archiviato BIT DEFAULT 0,
     
-    -- Metadati conversazione
-    ConversazioneId UNIQUEIDENTIFIER, -- Raggruppa messaggi della stessa conversazione
-    IsRisposta BIT NOT NULL DEFAULT 0,
-    MessaggioOriginaleId UNIQUEIDENTIFIER, -- Riferimento al messaggio originale
+    -- Metadati
+    DataInvio DATETIME2 NOT NULL DEFAULT GETDATE(),
+    InRispostaA INT, -- ID del messaggio a cui si risponde
     
-    -- Chiavi esterne
-    FOREIGN KEY (MittenteId) REFERENCES Utenti(Id),
-    FOREIGN KEY (DestinatarioId) REFERENCES Utenti(Id),
-    FOREIGN KEY (AnnuncioId) REFERENCES Annunci(Id) ON DELETE SET NULL,
-    FOREIGN KEY (MessaggioOriginaleId) REFERENCES Messaggi(Id),
-    
-    -- Indici
-    INDEX IX_Messaggi_MittenteId (MittenteId),
-    INDEX IX_Messaggi_DestinatarioId (DestinatarioId),
-    INDEX IX_Messaggi_AnnuncioId (AnnuncioId),
-    INDEX IX_Messaggi_ConversazioneId (ConversazioneId),
-    INDEX IX_Messaggi_DataInvio (DataInvio)
+    CONSTRAINT FK_Messaggi_Annunci FOREIGN KEY (AnnuncioId) REFERENCES Annunci(Id),
+    CONSTRAINT FK_Messaggi_Mittente FOREIGN KEY (MittentId) REFERENCES Utenti(Id),
+    CONSTRAINT FK_Messaggi_Destinatario FOREIGN KEY (DestinatarioId) REFERENCES Utenti(Id),
+    CONSTRAINT FK_Messaggi_Risposta FOREIGN KEY (InRispostaA) REFERENCES Messaggi(Id)
 );
 
--- Tabella RicercheSalvate
--- Gestisce le ricerche salvate dagli utenti per notifiche automatiche
+-- Tabella Ricerche Salvate
 CREATE TABLE RicercheSalvate (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    UtenteId UNIQUEIDENTIFIER NOT NULL,
-    
-    -- Informazioni ricerca
-    NomeRicerca NVARCHAR(200) NOT NULL,
-    Descrizione NVARCHAR(500),
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UtenteId INT NOT NULL,
+    Nome NVARCHAR(255) NOT NULL, -- Nome dato dall'utente alla ricerca
     
     -- Criteri di ricerca (JSON o campi separati)
-    CriteriRicerca NTEXT NOT NULL, -- JSON con tutti i filtri applicati
+    CriteriFiltro NTEXT, -- JSON con tutti i filtri applicati
     
-    -- Filtri principali (per query ottimizzate)
-    Categoria NVARCHAR(50),
-    CittaRicerca NVARCHAR(100),
-    BudgetMinimo DECIMAL(10, 2),
-    BudgetMassimo DECIMAL(10, 2),
-    SuperficieMinima DECIMAL(8, 2),
-    NumeroLocaliMinimo INT,
+    -- Filtri principali (per query più efficienti)
+    CategoriaId INT,
+    PrezzoMin DECIMAL(10,2),
+    PrezzoMax DECIMAL(10,2),
+    Citta NVARCHAR(100),
+    CAP NVARCHAR(10),
     
     -- Notifiche
-    NotificheAttive BIT NOT NULL DEFAULT 1,
-    FrequenzaNotifiche NVARCHAR(50) DEFAULT 'Giornaliera', -- Immediata, Giornaliera, Settimanale
+    NotificheAttive BIT DEFAULT 1,
     UltimaNotifica DATETIME2,
     
     -- Metadati
     DataCreazione DATETIME2 NOT NULL DEFAULT GETDATE(),
-    DataUltimaModifica DATETIME2 NOT NULL DEFAULT GETDATE(),
-    NumeroRisultatiUltimaEsecuzione INT DEFAULT 0,
-    Attiva BIT NOT NULL DEFAULT 1,
+    DataModifica DATETIME2 NOT NULL DEFAULT GETDATE(),
+    Attiva BIT DEFAULT 1,
     
-    -- Chiavi esterne
-    FOREIGN KEY (UtenteId) REFERENCES Utenti(Id) ON DELETE CASCADE,
-    
-    -- Indici
-    INDEX IX_RicercheSalvate_UtenteId (UtenteId),
-    INDEX IX_RicercheSalvate_NotificheAttive (NotificheAttive),
-    INDEX IX_RicercheSalvate_Categoria (Categoria),
-    INDEX IX_RicercheSalvate_CittaRicerca (CittaRicerca)
+    CONSTRAINT FK_RicercheSalvate_Utenti FOREIGN KEY (UtenteId) REFERENCES Utenti(Id),
+    CONSTRAINT FK_RicercheSalvate_Categorie FOREIGN KEY (CategoriaId) REFERENCES Categorie(Id)
 );
 
--- Tabella NotificheInviate
--- Log delle notifiche inviate per evitare duplicati
-CREATE TABLE NotificheInviate (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    UtenteId UNIQUEIDENTIFIER NOT NULL,
-    RicercaSalvataId UNIQUEIDENTIFIER,
-    AnnuncioId UNIQUEIDENTIFIER,
+-- ============================================================================
+-- TABELLE DI SUPPORTO
+-- ============================================================================
+
+-- Tabella per tracking delle visualizzazioni
+CREATE TABLE VisualizzazioniAnnunci (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    AnnuncioId INT NOT NULL,
+    UtenteId INT, -- NULL per utenti anonimi
+    IndirizzoIP NVARCHAR(45),
+    UserAgent NVARCHAR(500),
+    DataVisualizzazione DATETIME2 NOT NULL DEFAULT GETDATE(),
     
-    -- Dettagli notifica
-    TipoNotifica NVARCHAR(100) NOT NULL, -- NuovoAnnuncio, ModificaAnnuncio, MessaggioRicevuto, etc.
-    Titolo NVARCHAR(200),
-    Contenuto NTEXT,
-    
-    -- Stato
-    DataInvio DATETIME2 NOT NULL DEFAULT GETDATE(),
-    Inviata BIT NOT NULL DEFAULT 0,
-    DataConsegna DATETIME2,
-    
-    -- Chiavi esterne
-    FOREIGN KEY (UtenteId) REFERENCES Utenti(Id) ON DELETE CASCADE,
-    FOREIGN KEY (RicercaSalvataId) REFERENCES RicercheSalvate(Id) ON DELETE SET NULL,
-    FOREIGN KEY (AnnuncioId) REFERENCES Annunci(Id) ON DELETE SET NULL,
-    
-    -- Indici
-    INDEX IX_NotificheInviate_UtenteId (UtenteId),
-    INDEX IX_NotificheInviate_DataInvio (DataInvio),
-    INDEX IX_NotificheInviate_TipoNotifica (TipoNotifica)
+    CONSTRAINT FK_Visualizzazioni_Annunci FOREIGN KEY (AnnuncioId) REFERENCES Annunci(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_Visualizzazioni_Utenti FOREIGN KEY (UtenteId) REFERENCES Utenti(Id)
 );
 
--- =====================================================
--- VISTE UTILI PER L'APPLICAZIONE
--- =====================================================
+-- Tabella per log delle azioni amministrative
+CREATE TABLE LogAzioni (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UtenteId INT NOT NULL,
+    TipoAzione NVARCHAR(100) NOT NULL, -- VerificaAnnuncio, RifiutoAnnuncio, etc.
+    EntitaId INT, -- ID dell'entità su cui è stata fatta l'azione
+    TipoEntita NVARCHAR(50), -- Annuncio, Utente, etc.
+    Descrizione NVARCHAR(500),
+    DatiPrecedenti NTEXT, -- JSON con i dati prima della modifica
+    DatiNuovi NTEXT, -- JSON con i dati dopo la modifica
+    DataAzione DATETIME2 NOT NULL DEFAULT GETDATE(),
+    
+    CONSTRAINT FK_LogAzioni_Utenti FOREIGN KEY (UtenteId) REFERENCES Utenti(Id)
+);
 
--- Vista per annunci attivi con informazioni utente
-CREATE VIEW vw_AnnunciAttivi AS
-SELECT 
-    a.*,
-    u.Nome + ' ' + u.Cognome AS NomeProprietario,
-    u.Email AS EmailProprietario,
-    u.Telefono AS TelefonoProprietario,
-    u.TipoUtente,
-    (SELECT COUNT(*) FROM Immagini i WHERE i.AnnuncioId = a.Id) AS NumeroImmagini,
-    (SELECT TOP 1 UrlImmagine FROM Immagini i WHERE i.AnnuncioId = a.Id AND i.IsPrincipale = 1) AS ImmaginePrincipale
-FROM Annunci a
-INNER JOIN Utenti u ON a.UtenteId = u.Id
-WHERE a.Stato = 'Attivo' AND a.Attivo = 1 AND u.Attivo = 1;
+-- ============================================================================
+-- INDICI PER PERFORMANCE
+-- ============================================================================
 
--- Vista per statistiche utente
-CREATE VIEW vw_StatisticheUtente AS
-SELECT 
-    u.Id,
-    u.Nome,
-    u.Cognome,
-    u.Email,
-    u.TipoUtente,
-    COUNT(a.Id) AS NumeroAnnunci,
-    COUNT(CASE WHEN a.Stato = 'Attivo' THEN 1 END) AS AnnunciAttivi,
-    SUM(a.VisualizzazioniTotali) AS VisualizzazioniTotali,
-    COUNT(p.Id) AS NumeroPreferiti
-FROM Utenti u
-LEFT JOIN Annunci a ON u.Id = a.UtenteId
-LEFT JOIN Preferiti p ON u.Id = p.UtenteId
-GROUP BY u.Id, u.Nome, u.Cognome, u.Email, u.TipoUtente;
+-- Indici per ricerche frequenti
+CREATE INDEX IX_Annunci_Stato ON Annunci(Stato);
+CREATE INDEX IX_Annunci_Categoria ON Annunci(CategoriaId);
+CREATE INDEX IX_Annunci_Citta ON Annunci(Citta);
+CREATE INDEX IX_Annunci_Prezzo ON Annunci(PrezzoMensile);
+CREATE INDEX IX_Annunci_DataPubblicazione ON Annunci(DataPubblicazione);
+CREATE INDEX IX_Annunci_Posizione ON Annunci(Latitudine, Longitudine);
 
--- =====================================================
--- STORED PROCEDURES UTILI
--- =====================================================
+-- Indici per messaggi
+CREATE INDEX IX_Messaggi_Destinatario ON Messaggi(DestinatarioId);
+CREATE INDEX IX_Messaggi_Mittente ON Messaggi(MittentId);
+CREATE INDEX IX_Messaggi_Annuncio ON Messaggi(AnnuncioId);
+CREATE INDEX IX_Messaggi_DataInvio ON Messaggi(DataInvio);
 
--- Procedura per aggiornare il contatore visualizzazioni
-CREATE PROCEDURE sp_IncrementaVisualizzazioni
-    @AnnuncioId UNIQUEIDENTIFIER
+-- Indici per preferiti
+CREATE INDEX IX_Preferiti_Utente ON Preferiti(UtenteId);
+
+-- Indici per ricerche salvate
+CREATE INDEX IX_RicercheSalvate_Utente ON RicercheSalvate(UtenteId);
+
+-- ============================================================================
+-- DATI INIZIALI
+-- ============================================================================
+
+-- Inserimento categorie base
+INSERT INTO Categorie (Nome, Descrizione, Icona) VALUES
+('Appartamento', 'Appartamenti completi per studenti', 'home'),
+('Camera', 'Camere singole o condivise', 'bed'),
+('Parcheggio', 'Posti auto e garage', 'car'),
+('Studio', 'Monolocali e bilocali', 'briefcase'),
+('Posto Letto', 'Posto letto in camera condivisa', 'users');
+
+-- ============================================================================
+-- TRIGGER PER AGGIORNAMENTO AUTOMATICO
+-- ============================================================================
+
+-- Trigger per aggiornare DataModifica su Utenti
+CREATE TRIGGER TR_Utenti_UpdateModifica
+ON Utenti
+AFTER UPDATE
 AS
 BEGIN
-    UPDATE Annunci 
-    SET VisualizzazioniTotali = VisualizzazioniTotali + 1
-    WHERE Id = @AnnuncioId;
+    UPDATE Utenti 
+    SET DataModifica = GETDATE()
+    WHERE Id IN (SELECT Id FROM inserted);
 END;
 
--- Procedura per archiviare annunci scaduti
-CREATE PROCEDURE sp_ArchiviaAnnunciScaduti
-AS
-BEGIN
-    UPDATE Annunci 
-    SET Stato = 'Scaduto'
-    WHERE Stato = 'Attivo' 
-    AND DataScadenza IS NOT NULL 
-    AND DataScadenza < GETDATE();
-END;
-
--- =====================================================
--- TRIGGER PER AUTOMAZIONI
--- =====================================================
-
--- Trigger per aggiornare DataModifica negli annunci
-CREATE TRIGGER tr_Annunci_UpdateDataModifica
+-- Trigger per aggiornare DataModifica su Annunci
+CREATE TRIGGER TR_Annunci_UpdateModifica
 ON Annunci
 AFTER UPDATE
 AS
@@ -340,37 +308,103 @@ BEGIN
     WHERE Id IN (SELECT Id FROM inserted);
 END;
 
--- Trigger per generare ConversazioneId nei messaggi
-CREATE TRIGGER tr_Messaggi_GeneraConversazioneId
-ON Messaggi
+-- Trigger per aggiornare contatore visualizzazioni
+CREATE TRIGGER TR_Visualizzazioni_UpdateCounter
+ON VisualizzazioniAnnunci
 AFTER INSERT
 AS
 BEGIN
-    UPDATE m
-    SET ConversazioneId = CASE 
-        WHEN i.ConversazioneId IS NULL THEN i.Id
-        ELSE i.ConversazioneId
-    END
-    FROM Messaggi m
-    INNER JOIN inserted i ON m.Id = i.Id
-    WHERE m.ConversazioneId IS NULL;
+    UPDATE Annunci 
+    SET Visualizzazioni = Visualizzazioni + 1
+    WHERE Id IN (SELECT AnnuncioId FROM inserted);
 END;
 
--- =====================================================
--- DATI DI ESEMPIO (OPZIONALE)
--- =====================================================
+-- ============================================================================
+-- VISTE UTILI
+-- ============================================================================
 
--- Inserimento utenti di esempio
-INSERT INTO Utenti (SwitchEduId, Nome, Cognome, Email, TipoUtente) VALUES
-('edu-001', 'Mario', 'Rossi', 'mario.rossi@usi.ch', 'StudenteVerificato'),
-('edu-002', 'Anna', 'Bianchi', 'anna.bianchi@usi.ch', 'Studente'),
-('edu-003', 'Immobiliare', 'Ticino SA', 'info@immobiliareticino.ch', 'AziendaConosciuta');
+-- Vista per annunci attivi con informazioni complete
+CREATE VIEW VW_AnnunciAttivi AS
+SELECT 
+    a.*,
+    u.Nome + ' ' + u.Cognome AS NomeProprietario,
+    u.Email AS EmailProprietario,
+    u.Telefono AS TelefonoProprietario,
+    u.TipoUtente,
+    c.Nome AS NomeCategoria,
+    c.Icona AS IconaCategoria,
+    (SELECT COUNT(*) FROM Preferiti p WHERE p.AnnuncioId = a.Id) AS NumeroPreferiti,
+    (SELECT COUNT(*) FROM Messaggi m WHERE m.AnnuncioId = a.Id) AS NumeroMessaggi,
+    (SELECT TOP 1 UrlImmagine FROM Immagini i WHERE i.AnnuncioId = a.Id AND i.IsPrincipale = 1) AS ImmaginePrincipale
+FROM Annunci a
+INNER JOIN Utenti u ON a.UtenteId = u.Id
+INNER JOIN Categorie c ON a.CategoriaId = c.Id
+WHERE a.Stato = 'Attivo' AND u.Attivo = 1;
 
--- =====================================================
+-- Vista per statistiche utente
+CREATE VIEW VW_StatisticheUtente AS
+SELECT 
+    u.Id,
+    u.Nome + ' ' + u.Cognome AS NomeCompleto,
+    COUNT(a.Id) AS NumeroAnnunci,
+    COUNT(CASE WHEN a.Stato = 'Attivo' THEN 1 END) AS AnnunciAttivi,
+    COUNT(CASE WHEN a.Stato = 'Bozza' THEN 1 END) AS AnnunciBozza,
+    SUM(a.Visualizzazioni) AS TotaleVisualizzazioni,
+    COUNT(p.Id) AS NumeroPreferiti,
+    COUNT(m.Id) AS MessaggiRicevuti
+FROM Utenti u
+LEFT JOIN Annunci a ON u.Id = a.UtenteId
+LEFT JOIN Preferiti p ON u.Id = p.UtenteId
+LEFT JOIN Messaggi m ON u.Id = m.DestinatarioId
+WHERE u.Attivo = 1
+GROUP BY u.Id, u.Nome, u.Cognome;
+
+-- ============================================================================
+-- STORED PROCEDURES UTILI
+-- ============================================================================
+
+-- Procedura per ricerca annunci con filtri
+CREATE PROCEDURE SP_RicercaAnnunci
+    @CategoriaId INT = NULL,
+    @Citta NVARCHAR(100) = NULL,
+    @PrezzoMin DECIMAL(10,2) = NULL,
+    @PrezzoMax DECIMAL(10,2) = NULL,
+    @SuperficieMin DECIMAL(8,2) = NULL,
+    @NumeroLocaliMin INT = NULL,
+    @AnimaliAmmessi BIT = NULL,
+    @HasTerrazza BIT = NULL,
+    @HasGiardino BIT = NULL,
+    @AccessoDisabili BIT = NULL,
+    @Pagina INT = 1,
+    @ElementiPerPagina INT = 20
+AS
+BEGIN
+    DECLARE @Offset INT = (@Pagina - 1) * @ElementiPerPagina;
+    
+    SELECT *
+    FROM VW_AnnunciAttivi
+    WHERE 
+        (@CategoriaId IS NULL OR CategoriaId = @CategoriaId)
+        AND (@Citta IS NULL OR Citta LIKE '%' + @Citta + '%')
+        AND (@PrezzoMin IS NULL OR PrezzoMensile >= @PrezzoMin)
+        AND (@PrezzoMax IS NULL OR PrezzoMensile <= @PrezzoMax)
+        AND (@SuperficieMin IS NULL OR Superficie >= @SuperficieMin)
+        AND (@NumeroLocaliMin IS NULL OR NumeroLocali >= @NumeroLocaliMin)
+        AND (@AnimaliAmmessi IS NULL OR AnimaliAmmessi = @AnimaliAmmessi)
+        AND (@HasTerrazza IS NULL OR HasTerrazza = @HasTerrazza)
+        AND (@HasGiardino IS NULL OR HasGiardino = @HasGiardino)
+        AND (@AccessoDisabili IS NULL OR AccessoDisabili = @AccessoDisabili)
+    ORDER BY DataPubblicazione DESC
+    OFFSET @Offset ROWS
+    FETCH NEXT @ElementiPerPagina ROWS ONLY;
+END;
+
+-- ============================================================================
 -- FINE SCRIPT
--- =====================================================
+-- ============================================================================
 
-PRINT 'Database schema creato con successo!';
-PRINT 'Tabelle create: Utenti, Annunci, Immagini, Preferiti, Messaggi, RicercheSalvate, NotificheInviate';
-PRINT 'Viste create: vw_AnnunciAttivi, vw_StatisticheUtente';
-PRINT 'Stored Procedures create: sp_IncrementaVisualizzazioni, sp_ArchiviaAnnunciScaduti';
+PRINT 'Schema database creato con successo!';
+PRINT 'Tabelle create: Categorie, Utenti, Annunci, Immagini, Preferiti, Messaggi, RicercheSalvate';
+PRINT 'Tabelle di supporto: VisualizzazioniAnnunci, LogAzioni';
+PRINT 'Viste create: VW_AnnunciAttivi, VW_StatisticheUtente';
+PRINT 'Stored Procedure: SP_RicercaAnnunci';
