@@ -4,8 +4,6 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppProvider } from "@/hooks/use-app-context";
-import { Provider as UrqlProvider } from "urql";
-import { urqlClient } from "@/lib/urql-client";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,14 +26,12 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <UrqlProvider value={urqlClient}>
-      <QueryClientProvider client={queryClient}>
-        <AppProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <RootLayoutNav />
-          </GestureHandlerRootView>
-        </AppProvider>
-      </QueryClientProvider>
-    </UrqlProvider>
+    <QueryClientProvider client={queryClient}>
+      <AppProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <RootLayoutNav />
+        </GestureHandlerRootView>
+      </AppProvider>
+    </QueryClientProvider>
   );
 }
