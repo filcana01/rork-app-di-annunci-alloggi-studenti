@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background.primary,
     gap: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
+    borderBottomColor: Colors.border.medium,
   },
   searchContainer: {
     flex: 1,

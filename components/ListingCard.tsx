@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
-    color: Colors.primary[600],
+    color: Colors.primary[500],
   },
   priceLabel: {
     fontSize: Typography.fontSize.sm,

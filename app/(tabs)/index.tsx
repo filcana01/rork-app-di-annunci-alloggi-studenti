@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, FlatList, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Map, List } from 'lucide-react-native';
 import ListingCard from '@/components/ListingCard';
 import SearchBar from '@/components/SearchBar';
+import USILogo from '@/components/USILogo';
 import { mockListings } from '@/mocks/listings';
 import { useApp } from '@/hooks/use-app-context';
 import { router } from 'expo-router';
@@ -19,9 +20,12 @@ export default function HomeScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t.listings.title}</Text>
+        <View style={styles.headerLeft}>
+          <USILogo size={32} color={Colors.primary[500]} />
+          <Text style={styles.headerTitle}>USI Housing</Text>
+        </View>
         <TouchableOpacity
           style={styles.viewToggle}
           onPress={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
@@ -52,7 +56,7 @@ export default function HomeScreen() {
           <Text style={styles.mapPlaceholder}>Mappa interattiva qui</Text>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -68,14 +72,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     backgroundColor: Colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
-    ...Shadows.small,
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.border.black,
+    ...Shadows.medium,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
   },
   headerTitle: {
-    fontSize: Typography.fontSize['2xl'],
+    fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
     color: Colors.text.primary,
+    letterSpacing: 0.5,
   },
   viewToggle: {
     padding: Spacing.sm,

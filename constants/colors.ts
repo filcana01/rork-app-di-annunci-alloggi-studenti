@@ -1,59 +1,62 @@
-// USI-inspired color palette
+// Black and white color palette with USI branding
 export const Colors = {
-  // Primary colors inspired by USI branding
+  // Primary colors - black and white only
   primary: {
-    50: '#F0F7FF',
-    100: '#E0EFFF',
-    200: '#BAD9FF',
-    300: '#7CB8FF',
-    400: '#3B94FF',
-    500: '#0B6BCB', // Main USI blue
-    600: '#0A5AA8',
-    700: '#094A85',
-    800: '#083B6B',
-    900: '#072F56',
+    50: '#FFFFFF',
+    100: '#F8F8F8',
+    200: '#F0F0F0',
+    300: '#E8E8E8',
+    400: '#D0D0D0',
+    500: '#000000', // Main black
+    600: '#1A1A1A',
+    700: '#333333',
+    800: '#4D4D4D',
+    900: '#666666',
   },
   
   // Neutral grays for clean, academic look
   neutral: {
-    50: '#FAFAFA',
-    100: '#F5F5F5',
-    200: '#E5E5E5',
-    300: '#D4D4D4',
-    400: '#A3A3A3',
-    500: '#737373',
-    600: '#525252',
-    700: '#404040',
-    800: '#262626',
-    900: '#171717',
+    50: '#FFFFFF',
+    100: '#F8F8F8',
+    200: '#F0F0F0',
+    300: '#E8E8E8',
+    400: '#D0D0D0',
+    500: '#B8B8B8',
+    600: '#A0A0A0',
+    700: '#888888',
+    800: '#404040',
+    900: '#000000',
   },
   
-  // Semantic colors
-  success: '#10B981',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#3B82F6',
+  // Semantic colors - keeping minimal black/white theme
+  success: '#000000',
+  warning: '#666666',
+  error: '#000000',
+  info: '#333333',
   
   // Background colors
   background: {
     primary: '#FFFFFF',
-    secondary: '#FAFAFA',
-    tertiary: '#F5F5F5',
+    secondary: '#F8F8F8',
+    tertiary: '#F0F0F0',
+    dark: '#000000',
   },
   
   // Text colors
   text: {
-    primary: '#171717',
-    secondary: '#525252',
-    tertiary: '#737373',
+    primary: '#000000',
+    secondary: '#333333',
+    tertiary: '#666666',
     inverse: '#FFFFFF',
+    muted: '#888888',
   },
   
   // Border colors
   border: {
-    light: '#E5E5E5',
-    medium: '#D4D4D4',
-    dark: '#A3A3A3',
+    light: '#F0F0F0',
+    medium: '#E8E8E8',
+    dark: '#D0D0D0',
+    black: '#000000',
   },
 };
 
