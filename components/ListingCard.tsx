@@ -53,8 +53,8 @@ export default function ListingCard({ listing }: ListingCardProps) {
         >
           <Heart 
             size={20} 
-            color={isFavorite ? Colors.error : Colors.text.secondary}
-            fill={isFavorite ? Colors.error : 'transparent'}
+            color={isFavorite ? Colors.text.primary : Colors.text.secondary}
+            fill={isFavorite ? Colors.text.primary : 'transparent'}
           />
         </TouchableOpacity>
         <View style={styles.categoryBadge}>
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
-    color: Colors.primary[500],
+    color: Colors.text.primary,
   },
   priceLabel: {
     fontSize: Typography.fontSize.sm,

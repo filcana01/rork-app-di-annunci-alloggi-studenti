@@ -3,7 +3,6 @@ import { View, FlatList, StyleSheet, Text, TouchableOpacity } from 'react-native
 import { Map, List } from 'lucide-react-native';
 import ListingCard from '@/components/ListingCard';
 import SearchBar from '@/components/SearchBar';
-import USILogo from '@/components/USILogo';
 import { mockListings } from '@/mocks/listings';
 import { useApp } from '@/hooks/use-app-context';
 import { router } from 'expo-router';
@@ -23,7 +22,11 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <USILogo size={32} color={Colors.primary[500]} />
+          <View style={styles.logoContainer}>
+            <View style={styles.logoPlaceholder}>
+              <Text style={styles.logoText}>USI</Text>
+            </View>
+          </View>
           <Text style={styles.headerTitle}>USI Housing</Text>
         </View>
         <TouchableOpacity
@@ -31,9 +34,9 @@ export default function HomeScreen() {
           onPress={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
         >
           {viewMode === 'list' ? (
-            <Map size={20} color={Colors.primary[500]} />
+            <Map size={20} color={Colors.text.primary} />
           ) : (
-            <List size={20} color={Colors.primary[500]} />
+            <List size={20} color={Colors.text.primary} />
           )}
         </TouchableOpacity>
       </View>
@@ -81,6 +84,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.md,
   },
+  logoContainer: {
+    width: 40,
+    height: 40,
+  },
+  logoPlaceholder: {
+    width: 40,
+    height: 40,
+    backgroundColor: Colors.text.primary,
+    borderRadius: BorderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoText: {
+    color: Colors.text.inverse,
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.bold,
+  },
   headerTitle: {
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
@@ -91,6 +111,8 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     borderRadius: BorderRadius.md,
     backgroundColor: Colors.background.tertiary,
+    borderWidth: 1,
+    borderColor: Colors.border.medium,
   },
   listContent: {
     paddingVertical: Spacing.sm,
