@@ -12,7 +12,7 @@ export default function ListingDetailScreen() {
   const { id } = useLocalSearchParams();
   const { t, favorites, toggleFavorite } = useApp();
   
-  const listing = mockListings.find(l => l.id.toString() === id);
+  const listing = mockListings.find(l => (l.id as any)?.toString() === String(id));
   
   if (!listing) {
     return (
@@ -22,7 +22,7 @@ export default function ListingDetailScreen() {
     );
   }
 
-  const isFavorite = favorites.includes(listing.id);
+  const isFavorite = listing?.id ? favorites.includes(listing.id) : false;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -45,7 +45,7 @@ export default function ListingDetailScreen() {
 
         <ScrollView horizontal pagingEnabled style={styles.imageScroll}>
           {listing.images.map((image, index) => (
-            <Image key={index} source={{ uri: image.imageUrl || image }} style={styles.image} />
+            <Image key={index} source={{ uri: (image as any)?.imageUrl || image }} style={styles.image} />
           ))}
         </ScrollView>
 
@@ -202,7 +202,10 @@ export default function ListingDetailScreen() {
       <View style={styles.footer}>
         <TouchableOpacity 
           style={styles.contactButton}
-          onPress={() => router.push(`/profile/${listing.user?.id || listing.userId}`)}
+          onPress={() => {
+            const userId = (listing as any)?.user?.id || (listing as any)?.userId || 1;
+            router.push(`/profile/${userId}`);
+          }}
         >
           <MessageCircle size={20} color={Colors.text.inverse} />
           <Text style={styles.contactButtonText}>{t.listings.contactOwner}</Text>

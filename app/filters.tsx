@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Switch, SafeAreaView } from 'react-native';
 import { X, MapPin, Home, Car, DoorOpen } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { Colors, Shadows, Typography, Spacing, BorderRadius } from '@/constants/colors';
@@ -22,7 +22,7 @@ export default function FiltersScreen() {
     { value: FurnishingStatus.FURNISHED, label: getFurnishingStatusText(FurnishingStatus.FURNISHED) },
   ];
 
-  const updateFilter = (key, value) => {
+  const updateFilter = (key: string, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
@@ -38,15 +38,16 @@ export default function FiltersScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Filtri</Text>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-          <X size={24} color={Colors.text.primary} />
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.innerContainer}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Filtri</Text>
+          <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+            <X size={24} color={Colors.text.primary} />
+          </TouchableOpacity>
+        </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Category Filter */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Categoria</Text>
@@ -81,7 +82,7 @@ export default function FiltersScreen() {
               <Text style={styles.inputLabel}>Min</Text>
               <TextInput
                 style={styles.input}
-                value={filters.minPrice ? filters.minPrice.toString() : ''}
+                value={filters.minPrice !== null && filters.minPrice !== undefined ? String(filters.minPrice) : ''}
                 onChangeText={(text) => updateFilter('minPrice', text ? parseInt(text) : null)}
                 placeholder="0"
                 keyboardType="numeric"
@@ -92,7 +93,7 @@ export default function FiltersScreen() {
               <Text style={styles.inputLabel}>Max</Text>
               <TextInput
                 style={styles.input}
-                value={filters.maxPrice ? filters.maxPrice.toString() : ''}
+                value={filters.maxPrice !== null && filters.maxPrice !== undefined ? String(filters.maxPrice) : ''}
                 onChangeText={(text) => updateFilter('maxPrice', text ? parseInt(text) : null)}
                 placeholder="∞"
                 keyboardType="numeric"
@@ -123,7 +124,7 @@ export default function FiltersScreen() {
               <Text style={styles.inputLabel}>Min</Text>
               <TextInput
                 style={styles.input}
-                value={filters.minSurface ? filters.minSurface.toString() : ''}
+                value={filters.minSurface !== null && filters.minSurface !== undefined ? String(filters.minSurface) : ''}
                 onChangeText={(text) => updateFilter('minSurface', text ? parseInt(text) : null)}
                 placeholder="0"
                 keyboardType="numeric"
@@ -134,7 +135,7 @@ export default function FiltersScreen() {
               <Text style={styles.inputLabel}>Max</Text>
               <TextInput
                 style={styles.input}
-                value={filters.maxSurface ? filters.maxSurface.toString() : ''}
+                value={filters.maxSurface !== null && filters.maxSurface !== undefined ? String(filters.maxSurface) : ''}
                 onChangeText={(text) => updateFilter('maxSurface', text ? parseInt(text) : null)}
                 placeholder="∞"
                 keyboardType="numeric"
@@ -151,7 +152,7 @@ export default function FiltersScreen() {
               <Text style={styles.inputLabel}>Stanze</Text>
               <TextInput
                 style={styles.input}
-                value={filters.numberOfRooms ? filters.numberOfRooms.toString() : ''}
+                value={filters.numberOfRooms !== null && filters.numberOfRooms !== undefined ? String(filters.numberOfRooms) : ''}
                 onChangeText={(text) => updateFilter('numberOfRooms', text ? parseInt(text) : null)}
                 placeholder="Qualsiasi"
                 keyboardType="numeric"
@@ -161,7 +162,7 @@ export default function FiltersScreen() {
               <Text style={styles.inputLabel}>Bagni</Text>
               <TextInput
                 style={styles.input}
-                value={filters.numberOfBathrooms ? filters.numberOfBathrooms.toString() : ''}
+                value={filters.numberOfBathrooms !== null && filters.numberOfBathrooms !== undefined ? String(filters.numberOfBathrooms) : ''}
                 onChangeText={(text) => updateFilter('numberOfBathrooms', text ? parseInt(text) : null)}
                 placeholder="Qualsiasi"
                 keyboardType="numeric"
@@ -285,17 +286,18 @@ export default function FiltersScreen() {
             />
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.clearButton} onPress={handleClearFilters}>
-          <Text style={styles.clearButtonText}>Cancella</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.applyButton} onPress={handleApplyFilters}>
-          <Text style={styles.applyButtonText}>Applica Filtri</Text>
-        </TouchableOpacity>
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.clearButton} onPress={handleClearFilters}>
+            <Text style={styles.clearButtonText}>Cancella</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.applyButton} onPress={handleApplyFilters}>
+            <Text style={styles.applyButtonText}>Applica Filtri</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -303,6 +305,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background.primary,
+  },
+  innerContainer: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
