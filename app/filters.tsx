@@ -1,41 +1,44 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Switch } from 'react-native';
 import { X, MapPin, Home, Car, DoorOpen } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { Colors, Shadows, Typography, Spacing, BorderRadius } from '@/constants/colors';
 import { useApp } from '@/hooks/use-app-context';
+import { createSearchFilters, FurnishingStatus, getFurnishingStatusText } from '@/types';
 
 export default function FiltersScreen() {
-  const { t } = useApp();
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [city, setCity] = useState('');
-  const [minSurface, setMinSurface] = useState('');
-  const [rooms, setRooms] = useState('');
+  const { applyFilters } = useApp();
+  const [filters, setFilters] = useState(createSearchFilters());
 
   const categories = [
-    { id: 'room', name: t.listings.room, icon: DoorOpen },
-    { id: 'apartment', name: t.listings.apartment, icon: Home },
-    { id: 'parking', name: t.listings.parking, icon: Car },
+    { id: 1, name: 'Camera', nameEn: 'Room', icon: DoorOpen },
+    { id: 2, name: 'Appartamento', nameEn: 'Apartment', icon: Home },
+    { id: 3, name: 'Parcheggio', nameEn: 'Parking', icon: Car },
   ];
 
+  const furnishingOptions = [
+    { value: FurnishingStatus.UNFURNISHED, label: getFurnishingStatusText(FurnishingStatus.UNFURNISHED) },
+    { value: FurnishingStatus.PARTIALLY_FURNISHED, label: getFurnishingStatusText(FurnishingStatus.PARTIALLY_FURNISHED) },
+    { value: FurnishingStatus.FURNISHED, label: getFurnishingStatusText(FurnishingStatus.FURNISHED) },
+  ];
+
+  const updateFilter = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
   const handleApplyFilters = () => {
-    // TODO: Apply filters logic
+    if (applyFilters) {
+      applyFilters(filters);
+    }
     router.back();
   };
 
   const handleClearFilters = () => {
-    setSelectedCategory('');
-    setMinPrice('');
-    setMaxPrice('');
-    setCity('');
-    setMinSurface('');
-    setRooms('');
+    setFilters(createSearchFilters());
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Filtri</Text>
         <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
@@ -50,16 +53,16 @@ export default function FiltersScreen() {
           <View style={styles.categoryGrid}>
             {categories.map((category) => {
               const IconComponent = category.icon;
-              const isSelected = selectedCategory === category.id;
+              const isSelected = filters.categoryId === category.id;
               return (
                 <TouchableOpacity
                   key={category.id}
                   style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
-                  onPress={() => setSelectedCategory(isSelected ? '' : category.id)}
+                  onPress={() => updateFilter('categoryId', isSelected ? null : category.id)}
                 >
                   <IconComponent 
                     size={24} 
-                    color={isSelected ? Colors.primary[500] : Colors.text.secondary} 
+                    color={isSelected ? Colors.text.primary : Colors.text.secondary} 
                   />
                   <Text style={[styles.categoryText, isSelected && styles.categoryTextSelected]}>
                     {category.name}
@@ -78,8 +81,8 @@ export default function FiltersScreen() {
               <Text style={styles.inputLabel}>Min</Text>
               <TextInput
                 style={styles.input}
-                value={minPrice}
-                onChangeText={setMinPrice}
+                value={filters.minPrice ? filters.minPrice.toString() : ''}
+                onChangeText={(text) => updateFilter('minPrice', text ? parseInt(text) : null)}
                 placeholder="0"
                 keyboardType="numeric"
               />
@@ -89,8 +92,8 @@ export default function FiltersScreen() {
               <Text style={styles.inputLabel}>Max</Text>
               <TextInput
                 style={styles.input}
-                value={maxPrice}
-                onChangeText={setMaxPrice}
+                value={filters.maxPrice ? filters.maxPrice.toString() : ''}
+                onChangeText={(text) => updateFilter('maxPrice', text ? parseInt(text) : null)}
                 placeholder="∞"
                 keyboardType="numeric"
               />
@@ -105,8 +108,8 @@ export default function FiltersScreen() {
             <MapPin size={20} color={Colors.text.secondary} />
             <TextInput
               style={styles.locationInput}
-              value={city}
-              onChangeText={setCity}
+              value={filters.city}
+              onChangeText={(text) => updateFilter('city', text)}
               placeholder="Inserisci città o zona"
             />
           </View>
@@ -114,26 +117,173 @@ export default function FiltersScreen() {
 
         {/* Surface */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Superficie minima (m²)</Text>
-          <TextInput
-            style={styles.input}
-            value={minSurface}
-            onChangeText={setMinSurface}
-            placeholder="Es. 50"
-            keyboardType="numeric"
-          />
+          <Text style={styles.sectionTitle}>Superficie (m²)</Text>
+          <View style={styles.priceRow}>
+            <View style={styles.priceInput}>
+              <Text style={styles.inputLabel}>Min</Text>
+              <TextInput
+                style={styles.input}
+                value={filters.minSurface ? filters.minSurface.toString() : ''}
+                onChangeText={(text) => updateFilter('minSurface', text ? parseInt(text) : null)}
+                placeholder="0"
+                keyboardType="numeric"
+              />
+            </View>
+            <Text style={styles.priceSeparator}>-</Text>
+            <View style={styles.priceInput}>
+              <Text style={styles.inputLabel}>Max</Text>
+              <TextInput
+                style={styles.input}
+                value={filters.maxSurface ? filters.maxSurface.toString() : ''}
+                onChangeText={(text) => updateFilter('maxSurface', text ? parseInt(text) : null)}
+                placeholder="∞"
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
         </View>
 
-        {/* Rooms */}
+        {/* Rooms and Bathrooms */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Numero di stanze</Text>
-          <TextInput
-            style={styles.input}
-            value={rooms}
-            onChangeText={setRooms}
-            placeholder="Es. 2"
-            keyboardType="numeric"
-          />
+          <Text style={styles.sectionTitle}>Locali e Bagni</Text>
+          <View style={styles.priceRow}>
+            <View style={styles.priceInput}>
+              <Text style={styles.inputLabel}>Stanze</Text>
+              <TextInput
+                style={styles.input}
+                value={filters.numberOfRooms ? filters.numberOfRooms.toString() : ''}
+                onChangeText={(text) => updateFilter('numberOfRooms', text ? parseInt(text) : null)}
+                placeholder="Qualsiasi"
+                keyboardType="numeric"
+              />
+            </View>
+            <View style={styles.priceInput}>
+              <Text style={styles.inputLabel}>Bagni</Text>
+              <TextInput
+                style={styles.input}
+                value={filters.numberOfBathrooms ? filters.numberOfBathrooms.toString() : ''}
+                onChangeText={(text) => updateFilter('numberOfBathrooms', text ? parseInt(text) : null)}
+                placeholder="Qualsiasi"
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Furnishing */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Arredamento</Text>
+          <View style={styles.categoryGrid}>
+            {furnishingOptions.map((option) => {
+              const isSelected = filters.furnishingStatus === option.value;
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
+                  onPress={() => updateFilter('furnishingStatus', isSelected ? null : option.value)}
+                >
+                  <Text style={[styles.categoryText, isSelected && styles.categoryTextSelected]}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Features */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Caratteristiche</Text>
+          
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Terrazza</Text>
+            <Switch
+              value={filters.hasTerrace === true}
+              onValueChange={(value) => updateFilter('hasTerrace', value ? true : null)}
+              trackColor={{ false: Colors.border.light, true: Colors.text.primary }}
+              thumbColor={Colors.background.primary}
+            />
+          </View>
+          
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Giardino</Text>
+            <Switch
+              value={filters.hasGarden === true}
+              onValueChange={(value) => updateFilter('hasGarden', value ? true : null)}
+              trackColor={{ false: Colors.border.light, true: Colors.text.primary }}
+              thumbColor={Colors.background.primary}
+            />
+          </View>
+          
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Piscina</Text>
+            <Switch
+              value={filters.hasPool === true}
+              onValueChange={(value) => updateFilter('hasPool', value ? true : null)}
+              trackColor={{ false: Colors.border.light, true: Colors.text.primary }}
+              thumbColor={Colors.background.primary}
+            />
+          </View>
+          
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Animali ammessi</Text>
+            <Switch
+              value={filters.petsAllowed === true}
+              onValueChange={(value) => updateFilter('petsAllowed', value ? true : null)}
+              trackColor={{ false: Colors.border.light, true: Colors.text.primary }}
+              thumbColor={Colors.background.primary}
+            />
+          </View>
+        </View>
+
+        {/* Accessibility */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Accessibilità</Text>
+          
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Ascensore</Text>
+            <Switch
+              value={filters.hasElevator === true}
+              onValueChange={(value) => updateFilter('hasElevator', value ? true : null)}
+              trackColor={{ false: Colors.border.light, true: Colors.text.primary }}
+              thumbColor={Colors.background.primary}
+            />
+          </View>
+          
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Accesso disabili</Text>
+            <Switch
+              value={filters.hasRampAccess === true}
+              onValueChange={(value) => updateFilter('hasRampAccess', value ? true : null)}
+              trackColor={{ false: Colors.border.light, true: Colors.text.primary }}
+              thumbColor={Colors.background.primary}
+            />
+          </View>
+        </View>
+
+        {/* Other Options */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Altre Opzioni</Text>
+          
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Accetta SwissCaution</Text>
+            <Switch
+              value={filters.acceptsSwissCaution === true}
+              onValueChange={(value) => updateFilter('acceptsSwissCaution', value ? true : null)}
+              trackColor={{ false: Colors.border.light, true: Colors.text.primary }}
+              thumbColor={Colors.background.primary}
+            />
+          </View>
+          
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Disponibile subito</Text>
+            <Switch
+              value={filters.isAvailableImmediately === true}
+              onValueChange={(value) => updateFilter('isAvailableImmediately', value ? true : null)}
+              trackColor={{ false: Colors.border.light, true: Colors.text.primary }}
+              thumbColor={Colors.background.primary}
+            />
+          </View>
         </View>
       </ScrollView>
 
@@ -145,7 +295,7 @@ export default function FiltersScreen() {
           <Text style={styles.applyButtonText}>Applica Filtri</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -199,8 +349,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background.primary,
   },
   categoryCardSelected: {
-    borderColor: Colors.primary[500],
-    backgroundColor: Colors.primary[50],
+    borderColor: Colors.text.primary,
+    backgroundColor: Colors.border.light,
   },
   categoryText: {
     fontSize: Typography.fontSize.sm,
@@ -210,7 +360,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   categoryTextSelected: {
-    color: Colors.primary[500],
+    color: Colors.text.primary,
+    fontWeight: Typography.fontWeight.semibold,
   },
   priceRow: {
     flexDirection: 'row',
@@ -283,9 +434,22 @@ const styles = StyleSheet.create({
     flex: 2,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.primary[500],
+    backgroundColor: Colors.text.primary,
     alignItems: 'center',
     ...Shadows.small,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+  },
+  switchLabel: {
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.primary,
+    flex: 1,
   },
   applyButtonText: {
     fontSize: Typography.fontSize.base,

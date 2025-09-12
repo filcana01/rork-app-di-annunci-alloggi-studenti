@@ -10,25 +10,21 @@ export default function ListingCard({ listing }) {
   const isFavorite = favorites.includes(listing.id);
 
   const getCategoryIcon = () => {
-    switch (listing.category) {
+    const categoryName = listing.category?.nameEn?.toLowerCase();
+    switch (categoryName) {
       case 'room':
         return <DoorOpen size={16} color={Colors.text.secondary} />;
       case 'apartment':
         return <Home size={16} color={Colors.text.secondary} />;
       case 'parking':
         return <Car size={16} color={Colors.text.secondary} />;
+      default:
+        return <Home size={16} color={Colors.text.secondary} />;
     }
   };
 
   const getCategoryName = () => {
-    switch (listing.category) {
-      case 'room':
-        return t.listings.room;
-      case 'apartment':
-        return t.listings.apartment;
-      case 'parking':
-        return t.listings.parking;
-    }
+    return listing.category?.nameIt || 'Categoria';
   };
 
   return (
@@ -38,7 +34,7 @@ export default function ListingCard({ listing }) {
       activeOpacity={0.9}
     >
       <View style={styles.imageContainer}>
-        <Image source={{ uri: listing.images[0] }} style={styles.image} />
+        <Image source={{ uri: listing.images[0]?.imageUrl || listing.images[0] }} style={styles.image} />
         <TouchableOpacity 
           style={styles.favoriteButton}
           onPress={(e) => {
@@ -64,14 +60,14 @@ export default function ListingCard({ listing }) {
         <View style={styles.locationRow}>
           <MapPin size={14} color={Colors.text.secondary} />
           <Text style={styles.location} numberOfLines={1}>
-            {listing.address.city}, {listing.address.street}
+            {listing.city}, {listing.address}
           </Text>
         </View>
         
         <View style={styles.details}>
-          <Text style={styles.surface}>{listing.surface} m²</Text>
-          {listing.rooms && (
-            <Text style={styles.rooms}>{listing.rooms} {t.listings.rooms.toLowerCase()}</Text>
+          <Text style={styles.surface}>{listing.surfaceArea} m²</Text>
+          {listing.numberOfRooms && (
+            <Text style={styles.rooms}>{listing.numberOfRooms} {t.listings.rooms.toLowerCase()}</Text>
           )}
         </View>
         

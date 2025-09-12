@@ -1,22 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, FlatList, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Map, List } from 'lucide-react-native';
 import ListingCard from '@/components/ListingCard';
 import SearchBar from '@/components/SearchBar';
-import { mockListings } from '@/mocks/listings';
 import { useApp } from '@/hooks/use-app-context';
 import { router } from 'expo-router';
 import { Colors, Shadows, Typography, Spacing, BorderRadius } from '@/constants/colors';
 
 export default function HomeScreen() {
-  const { t } = useApp();
+  const { filteredListings } = useApp();
   const [viewMode, setViewMode] = useState('list');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredListings = mockListings.filter(listing =>
-    listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    listing.address.city.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const displayListings = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return filteredListings;
+    }
+    return filteredListings.filter(listing =>
+      listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.city.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [filteredListings, searchQuery]);
 
   return (
     <View style={styles.container}>
@@ -48,8 +52,8 @@ export default function HomeScreen() {
 
       {viewMode === 'list' ? (
         <FlatList
-          data={filteredListings}
-          keyExtractor={(item) => item.id}
+          data={displayListings}
+          keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => <ListingCard listing={item} />}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}

@@ -12,7 +12,7 @@ export default function ListingDetailScreen() {
   const { id } = useLocalSearchParams();
   const { t, favorites, toggleFavorite } = useApp();
   
-  const listing = mockListings.find(l => l.id === id);
+  const listing = mockListings.find(l => l.id.toString() === id);
   
   if (!listing) {
     return (
@@ -45,7 +45,7 @@ export default function ListingDetailScreen() {
 
         <ScrollView horizontal pagingEnabled style={styles.imageScroll}>
           {listing.images.map((image, index) => (
-            <Image key={index} source={{ uri: image }} style={styles.image} />
+            <Image key={index} source={{ uri: image.imageUrl || image }} style={styles.image} />
           ))}
         </ScrollView>
 
@@ -55,7 +55,7 @@ export default function ListingDetailScreen() {
           <View style={styles.locationRow}>
             <MapPin size={16} color={Colors.text.secondary} />
             <Text style={styles.location}>
-              {listing.address.street}, {listing.address.city}
+              {listing.address}, {listing.city}
             </Text>
           </View>
 
@@ -72,17 +72,17 @@ export default function ListingDetailScreen() {
           <View style={styles.features}>
             <View style={styles.feature}>
               <Maximize size={20} color={Colors.text.secondary} />
-              <Text style={styles.featureText}>{listing.surface} m²</Text>
+              <Text style={styles.featureText}>{listing.surfaceArea} m²</Text>
             </View>
-            {listing.rooms && (
+            {listing.numberOfRooms && (
               <View style={styles.feature}>
                 <Home size={20} color={Colors.text.secondary} />
-                <Text style={styles.featureText}>{listing.rooms} {t.listings.rooms.toLowerCase()}</Text>
+                <Text style={styles.featureText}>{listing.numberOfRooms} {t.listings.rooms.toLowerCase()}</Text>
               </View>
             )}
             <View style={styles.feature}>
               <Bath size={20} color={Colors.text.secondary} />
-              <Text style={styles.featureText}>{listing.bathrooms} {t.listings.bathrooms.toLowerCase()}</Text>
+              <Text style={styles.featureText}>{listing.numberOfBathrooms} {t.listings.bathrooms.toLowerCase()}</Text>
             </View>
             {listing.floor && (
               <View style={styles.feature}>
@@ -100,28 +100,28 @@ export default function ListingDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t.listings.features}</Text>
             <View style={styles.featuresList}>
-              {listing.features.terrace && (
+              {listing.hasTerrace && (
                 <View style={styles.featureItem}>
                   <Check size={16} color={Colors.success} />
-                  <Text style={styles.featureItemText}>{t.listings.terrace}</Text>
+                  <Text style={styles.featureItemText}>Terrazza</Text>
                 </View>
               )}
-              {listing.features.garden && (
+              {listing.hasGarden && (
                 <View style={styles.featureItem}>
                   <Check size={16} color={Colors.success} />
-                  <Text style={styles.featureItemText}>{t.listings.garden}</Text>
+                  <Text style={styles.featureItemText}>Giardino</Text>
                 </View>
               )}
-              {listing.features.petsAllowed && (
+              {listing.hasPool && (
                 <View style={styles.featureItem}>
                   <Check size={16} color={Colors.success} />
-                  <Text style={styles.featureItemText}>{t.listings.petsAllowed}</Text>
+                  <Text style={styles.featureItemText}>Piscina</Text>
                 </View>
               )}
-              {listing.features.accessibleForDisabled && (
+              {listing.petsAllowed && (
                 <View style={styles.featureItem}>
                   <Check size={16} color={Colors.success} />
-                  <Text style={styles.featureItemText}>{t.listings.accessible}</Text>
+                  <Text style={styles.featureItemText}>Animali ammessi</Text>
                 </View>
               )}
             </View>
@@ -132,21 +132,21 @@ export default function ListingDetailScreen() {
             <View style={styles.detail}>
               <Calendar size={16} color={Colors.text.secondary} />
               <Text style={styles.detailText}>
-                {listing.availabilityType === 'immediately' ? 'Disponibile da subito' : `Disponibile dal ${new Date(listing.availableFrom).toLocaleDateString()}`}
+                {listing.isAvailableImmediately ? 'Disponibile da subito' : `Disponibile dal ${new Date(listing.availabilityDate).toLocaleDateString()}`}
               </Text>
             </View>
             <View style={styles.detail}>
               <Text style={styles.detailLabel}>Durata minima contratto:</Text>
-              <Text style={styles.detailText}>{listing.minimumContractMonths} mesi</Text>
+              <Text style={styles.detailText}>{listing.minContractDuration} mesi</Text>
             </View>
             <View style={styles.detail}>
               <Text style={styles.detailLabel}>Arredamento:</Text>
               <Text style={styles.detailText}>
-                {listing.furnishing === 'furnished' ? 'Arredato' : 
-                 listing.furnishing === 'partially_furnished' ? 'Parzialmente arredato' : 'Non arredato'}
+                {listing.furnishingStatus === 2 ? 'Arredato' : 
+                 listing.furnishingStatus === 1 ? 'Parzialmente arredato' : 'Non arredato'}
               </Text>
             </View>
-            {listing.yearlyAdjustment && (
+            {listing.annualAdjustment && (
               <View style={styles.detail}>
                 <Check size={16} color={Colors.success} />
                 <Text style={styles.detailText}>Conguaglio annuale</Text>
@@ -161,21 +161,22 @@ export default function ListingDetailScreen() {
           </View>
 
           {/* Accessibility Section */}
-          {listing.accessibility.length > 0 && (
+          {(listing.hasElevator || listing.hasRampAccess) && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Accessibilità</Text>
               <View style={styles.featuresList}>
-                {listing.accessibility.map((feature, index) => (
-                  <View key={index} style={styles.featureItem}>
+                {listing.hasElevator && (
+                  <View style={styles.featureItem}>
                     <Check size={16} color={Colors.success} />
-                    <Text style={styles.featureItemText}>
-                      {feature === 'elevator' ? 'Ascensore' :
-                       feature === 'disabled_access' ? 'Accesso disabili' :
-                       feature === 'ground_floor' ? 'Piano terra' :
-                       feature === 'ramp' ? 'Rampa di accesso' : feature}
-                    </Text>
+                    <Text style={styles.featureItemText}>Ascensore</Text>
                   </View>
-                ))}
+                )}
+                {listing.hasRampAccess && (
+                  <View style={styles.featureItem}>
+                    <Check size={16} color={Colors.success} />
+                    <Text style={styles.featureItemText}>Accesso disabili</Text>
+                  </View>
+                )}
               </View>
             </View>
           )}
@@ -193,12 +194,7 @@ export default function ListingDetailScreen() {
                 <Text style={styles.detailText}>Accetta SwissCaution</Text>
               </View>
             )}
-            {listing.acceptsOtherGuarantees && listing.guaranteeServices && (
-              <View style={styles.detail}>
-                <Shield size={16} color={Colors.success} />
-                <Text style={styles.detailText}>Servizi accettati: {listing.guaranteeServices}</Text>
-              </View>
-            )}
+
           </View>
         </View>
       </ScrollView>
@@ -206,7 +202,7 @@ export default function ListingDetailScreen() {
       <View style={styles.footer}>
         <TouchableOpacity 
           style={styles.contactButton}
-          onPress={() => router.push(`/profile/${listing.userId}`)}
+          onPress={() => router.push(`/profile/${listing.user?.id || listing.userId}`)}
         >
           <MessageCircle size={20} color={Colors.text.inverse} />
           <Text style={styles.contactButtonText}>{t.listings.contactOwner}</Text>

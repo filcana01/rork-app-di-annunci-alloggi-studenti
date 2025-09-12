@@ -3,72 +3,24 @@ import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, SafeAr
 import { useApp } from '@/hooks/use-app-context';
 import { Camera, MapPin, Plus, X, Upload, Calendar } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { createListing, FurnishingStatus, ListingStatus, getFurnishingStatusText } from '@/types';
 
 export default function CreateListingScreen() {
-  const { t } = useApp();
-  const [form, setForm] = useState({
-    category: 'room',
-    title: '',
-    description: '',
-    images: [],
-    address: {
-      street: '',
-      zipCode: '',
-      city: '',
-      country: 'Italia'
-    },
-    surface: '',
-    rooms: '',
-    floor: '',
-    bathrooms: '1',
-    furnishing: 'furnished',
-    monthlyRent: '',
+  const [form, setForm] = useState(createListing({
+    categoryId: 1, // Default to room
+    country: 'Svizzera',
+    furnishingStatus: FurnishingStatus.FURNISHED,
     expensesIncluded: true,
-    monthlyExpenses: '',
-    yearlyAdjustment: false,
-    features: {
-      terrace: false,
-      garden: false,
-      petsAllowed: false,
-      accessibleForDisabled: false
-    },
-    availabilityType: 'immediately',
-    availableFrom: '',
-    minimumContractMonths: '12',
-    rules: '',
-    accessibility: [],
-    securityDeposit: '',
-    acceptsSwissCaution: false,
-    acceptsOtherGuarantees: false,
-    guaranteeServices: ''
-  });
+    isAvailableImmediately: true,
+    minContractDuration: 12,
+    status: ListingStatus.DRAFT
+  }));
 
   const updateForm = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const updateAddress = (field, value) => {
-    setForm(prev => ({
-      ...prev,
-      address: { ...prev.address, [field]: value }
-    }));
-  };
 
-  const updateFeatures = (feature, value) => {
-    setForm(prev => ({
-      ...prev,
-      features: { ...prev.features, [feature]: value }
-    }));
-  };
-
-  const updateAccessibility = (feature) => {
-    setForm(prev => ({
-      ...prev,
-      accessibility: prev.accessibility.includes(feature)
-        ? prev.accessibility.filter(f => f !== feature)
-        : [...prev.accessibility, feature]
-    }));
-  };
 
   const addImage = () => {
     // Placeholder per aggiungere immagini
@@ -101,15 +53,15 @@ export default function CreateListingScreen() {
       Alert.alert('Errore', 'La descrizione è obbligatoria');
       return false;
     }
-    if (!form.address.street.trim() || !form.address.city.trim()) {
+    if (!form.address.trim() || !form.city.trim()) {
       Alert.alert('Errore', 'Indirizzo completo obbligatorio');
       return false;
     }
-    if (!form.surface || parseInt(form.surface) <= 0) {
+    if (!form.surfaceArea || form.surfaceArea <= 0) {
       Alert.alert('Errore', 'Superficie deve essere maggiore di 0');
       return false;
     }
-    if (!form.monthlyRent || parseInt(form.monthlyRent) <= 0) {
+    if (!form.monthlyRent || form.monthlyRent <= 0) {
       Alert.alert('Errore', 'Prezzo mensile obbligatorio');
       return false;
     }
@@ -149,20 +101,24 @@ export default function CreateListingScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Categoria *</Text>
             <View style={styles.categoryButtons}>
-              {['room', 'apartment', 'parking'].map(cat => (
+              {[
+                { id: 1, name: 'Camera' },
+                { id: 2, name: 'Appartamento' },
+                { id: 3, name: 'Parcheggio' }
+              ].map(cat => (
                 <TouchableOpacity
-                  key={cat}
+                  key={cat.id}
                   style={[
                     styles.categoryButton,
-                    form.category === cat && styles.categoryButtonActive
+                    form.categoryId === cat.id && styles.categoryButtonActive
                   ]}
-                  onPress={() => updateForm('category', cat)}
+                  onPress={() => updateForm('categoryId', cat.id)}
                 >
                   <Text style={[
                     styles.categoryButtonText,
-                    form.category === cat && styles.categoryButtonTextActive
+                    form.categoryId === cat.id && styles.categoryButtonTextActive
                   ]}>
-                    {cat === 'room' ? 'Camera' : cat === 'apartment' ? 'Appartamento' : 'Parcheggio'}
+                    {cat.name}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -216,22 +172,22 @@ export default function CreateListingScreen() {
             <TextInput
               style={styles.input}
               placeholder="Via e numero civico *"
-              value={form.address.street}
-              onChangeText={(text) => updateAddress('street', text)}
+              value={form.address}
+              onChangeText={(text) => updateForm('address', text)}
             />
             <View style={styles.row}>
               <TextInput
                 style={[styles.input, styles.halfInput]}
                 placeholder="CAP *"
-                value={form.address.zipCode}
-                onChangeText={(text) => updateAddress('zipCode', text)}
+                value={form.postalCode}
+                onChangeText={(text) => updateForm('postalCode', text)}
                 keyboardType="numeric"
               />
               <TextInput
                 style={[styles.input, styles.halfInput]}
                 placeholder="Città *"
-                value={form.address.city}
-                onChangeText={(text) => updateAddress('city', text)}
+                value={form.city}
+                onChangeText={(text) => updateForm('city', text)}
               />
             </View>
           </View>
@@ -243,16 +199,16 @@ export default function CreateListingScreen() {
               <TextInput
                 style={[styles.input, styles.halfInput]}
                 placeholder="Superficie (m²) *"
-                value={form.surface}
-                onChangeText={(text) => updateForm('surface', text)}
+                value={form.surfaceArea?.toString() || ''}
+                onChangeText={(text) => updateForm('surfaceArea', text ? parseInt(text) : 0)}
                 keyboardType="numeric"
               />
-              {form.category !== 'parking' && (
+              {form.categoryId !== 3 && (
                 <TextInput
                   style={[styles.input, styles.halfInput]}
                   placeholder="N. Locali"
-                  value={form.rooms}
-                  onChangeText={(text) => updateForm('rooms', text)}
+                  value={form.numberOfRooms?.toString() || ''}
+                  onChangeText={(text) => updateForm('numberOfRooms', text ? parseInt(text) : null)}
                   keyboardType="numeric"
                 />
               )}
@@ -261,39 +217,43 @@ export default function CreateListingScreen() {
               <TextInput
                 style={[styles.input, styles.halfInput]}
                 placeholder="Piano"
-                value={form.floor}
-                onChangeText={(text) => updateForm('floor', text)}
+                value={form.floor?.toString() || ''}
+                onChangeText={(text) => updateForm('floor', text ? parseInt(text) : 0)}
+                keyboardType="numeric"
               />
               <TextInput
                 style={[styles.input, styles.halfInput]}
                 placeholder="N. Bagni"
-                value={form.bathrooms}
-                onChangeText={(text) => updateForm('bathrooms', text)}
+                value={form.numberOfBathrooms?.toString() || ''}
+                onChangeText={(text) => updateForm('numberOfBathrooms', text ? parseInt(text) : null)}
                 keyboardType="numeric"
               />
             </View>
           </View>
 
           {/* Furnishing */}
-          {form.category !== 'parking' && (
+          {form.categoryId !== 3 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Arredamento</Text>
               <View style={styles.furnishingButtons}>
-                {['furnished', 'partially_furnished', 'unfurnished'].map(furn => (
+                {[
+                  { value: FurnishingStatus.FURNISHED, label: getFurnishingStatusText(FurnishingStatus.FURNISHED) },
+                  { value: FurnishingStatus.PARTIALLY_FURNISHED, label: getFurnishingStatusText(FurnishingStatus.PARTIALLY_FURNISHED) },
+                  { value: FurnishingStatus.UNFURNISHED, label: getFurnishingStatusText(FurnishingStatus.UNFURNISHED) }
+                ].map(furn => (
                   <TouchableOpacity
-                    key={furn}
+                    key={furn.value}
                     style={[
                       styles.furnishingButton,
-                      form.furnishing === furn && styles.furnishingButtonActive
+                      form.furnishingStatus === furn.value && styles.furnishingButtonActive
                     ]}
-                    onPress={() => updateForm('furnishing', furn)}
+                    onPress={() => updateForm('furnishingStatus', furn.value)}
                   >
                     <Text style={[
                       styles.furnishingButtonText,
-                      form.furnishing === furn && styles.furnishingButtonTextActive
+                      form.furnishingStatus === furn.value && styles.furnishingButtonTextActive
                     ]}>
-                      {furn === 'furnished' ? 'Arredato' : 
-                       furn === 'partially_furnished' ? 'Parz. Arredato' : 'Non Arredato'}
+                      {furn.label}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -329,31 +289,31 @@ export default function CreateListingScreen() {
             )}
             <TouchableOpacity
               style={styles.checkboxRow}
-              onPress={() => updateForm('yearlyAdjustment', !form.yearlyAdjustment)}
+              onPress={() => updateForm('annualAdjustment', !form.annualAdjustment)}
             >
-              <View style={[styles.checkbox, form.yearlyAdjustment && styles.checkboxActive]} />
+              <View style={[styles.checkbox, form.annualAdjustment && styles.checkboxActive]} />
               <Text style={styles.checkboxText}>Conguaglio annuale</Text>
             </TouchableOpacity>
           </View>
 
           {/* Features */}
-          {form.category !== 'parking' && (
+          {form.categoryId !== 3 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Caratteristiche</Text>
               {Object.entries({
-                terrace: 'Terrazza',
-                garden: 'Giardino',
-                petsAllowed: 'Animali ammessi',
-                accessibleForDisabled: 'Accessibile ai disabili'
+                hasTerrace: 'Terrazza',
+                hasGarden: 'Giardino',
+                hasPool: 'Piscina',
+                petsAllowed: 'Animali ammessi'
               }).map(([key, label]) => (
                 <TouchableOpacity
                   key={key}
                   style={styles.checkboxRow}
-                  onPress={() => updateFeatures(key, !form.features[key])}
+                  onPress={() => updateForm(key, !form[key])}
                 >
                   <View style={[
                     styles.checkbox, 
-                    form.features[key] && styles.checkboxActive
+                    form[key] && styles.checkboxActive
                   ]} />
                   <Text style={styles.checkboxText}>{label}</Text>
                 </TouchableOpacity>
@@ -365,37 +325,44 @@ export default function CreateListingScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Disponibilità</Text>
             <View style={styles.availabilityButtons}>
-              {['immediately', 'from_date'].map(type => (
+              {[true, false].map(isImmediate => (
                 <TouchableOpacity
-                  key={type}
+                  key={isImmediate.toString()}
                   style={[
                     styles.availabilityButton,
-                    form.availabilityType === type && styles.availabilityButtonActive
+                    form.isAvailableImmediately === isImmediate && styles.availabilityButtonActive
                   ]}
-                  onPress={() => updateForm('availabilityType', type)}
+                  onPress={() => updateForm('isAvailableImmediately', isImmediate)}
                 >
                   <Text style={[
                     styles.availabilityButtonText,
-                    form.availabilityType === type && styles.availabilityButtonTextActive
+                    form.isAvailableImmediately === isImmediate && styles.availabilityButtonTextActive
                   ]}>
-                    {type === 'immediately' ? 'Da subito' : 'Da data specifica'}
+                    {isImmediate ? 'Da subito' : 'Da data specifica'}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
-            {form.availabilityType === 'from_date' && (
+            {!form.isAvailableImmediately && (
               <TextInput
                 style={styles.input}
                 placeholder="Data disponibilità (gg/mm/aaaa)"
-                value={form.availableFrom}
-                onChangeText={(text) => updateForm('availableFrom', text)}
+                value={form.availabilityDate ? form.availabilityDate.toLocaleDateString('it-IT') : ''}
+                onChangeText={(text) => {
+                  // Simple date parsing - in production use a proper date picker
+                  const parts = text.split('/');
+                  if (parts.length === 3) {
+                    const date = new Date(parts[2], parts[1] - 1, parts[0]);
+                    updateForm('availabilityDate', date);
+                  }
+                }}
               />
             )}
             <TextInput
               style={styles.input}
               placeholder="Durata minima contratto (mesi)"
-              value={form.minimumContractMonths}
-              onChangeText={(text) => updateForm('minimumContractMonths', text)}
+              value={form.minContractDuration?.toString() || ''}
+              onChangeText={(text) => updateForm('minContractDuration', text ? parseInt(text) : null)}
               keyboardType="numeric"
             />
           </View>
@@ -404,19 +371,17 @@ export default function CreateListingScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Accessibilità</Text>
             {Object.entries({
-              elevator: 'Ascensore',
-              disabled_access: 'Accesso disabili',
-              ground_floor: 'Piano terra',
-              ramp: 'Rampa di accesso'
+              hasElevator: 'Ascensore',
+              hasRampAccess: 'Accesso disabili'
             }).map(([key, label]) => (
               <TouchableOpacity
                 key={key}
                 style={styles.checkboxRow}
-                onPress={() => updateAccessibility(key)}
+                onPress={() => updateForm(key, !form[key])}
               >
                 <View style={[
                   styles.checkbox, 
-                  form.accessibility.includes(key) && styles.checkboxActive
+                  form[key] && styles.checkboxActive
                 ]} />
                 <Text style={styles.checkboxText}>{label}</Text>
               </TouchableOpacity>
@@ -440,21 +405,7 @@ export default function CreateListingScreen() {
               <View style={[styles.checkbox, form.acceptsSwissCaution && styles.checkboxActive]} />
               <Text style={styles.checkboxText}>Accetta SwissCaution</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.checkboxRow}
-              onPress={() => updateForm('acceptsOtherGuarantees', !form.acceptsOtherGuarantees)}
-            >
-              <View style={[styles.checkbox, form.acceptsOtherGuarantees && styles.checkboxActive]} />
-              <Text style={styles.checkboxText}>Accetta altri servizi di garanzia</Text>
-            </TouchableOpacity>
-            {form.acceptsOtherGuarantees && (
-              <TextInput
-                style={styles.input}
-                placeholder="Servizi di garanzia accettati (es. Garantme, Locapass)"
-                value={form.guaranteeServices}
-                onChangeText={(text) => updateForm('guaranteeServices', text)}
-              />
-            )}
+
           </View>
 
           {/* Rules */}
