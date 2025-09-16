@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Dimensions, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Dimensions, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { mockListings } from '@/mocks/listings';
 import { useApp } from '@/hooks/use-app-context';
-import { X, MapPin, Home, Bath, Maximize, Calendar, Check, MessageCircle, Heart, Building, Shield, Euro } from 'lucide-react-native';
+import { useListing } from '@/hooks/use-graphql';
+import { X, MapPin, Home, Bath, Maximize, Calendar, Check, MessageCircle, Heart, Building, Shield, Euro, AlertCircle } from 'lucide-react-native';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/colors';
 
 const { width } = Dimensions.get('window');
@@ -12,12 +12,38 @@ export default function ListingDetailScreen() {
   const { id } = useLocalSearchParams();
   const { t, favorites, toggleFavorite } = useApp();
   
-  const listing = mockListings.find(l => l.id?.toString() === String(id));
+  // Usa React Query per ottenere il listing
+  const { data: listing, isLoading, error } = useListing(id);
   
-  if (!listing) {
+  if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Annuncio non trovato</Text>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <X size={24} color={Colors.text.primary} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.text.primary} />
+          <Text style={styles.loadingText}>Caricamento annuncio...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  
+  if (error || !listing) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <X size={24} color={Colors.text.primary} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.errorContainer}>
+          <AlertCircle size={48} color={Colors.text.secondary} />
+          <Text style={styles.errorTitle}>Annuncio non trovato</Text>
+          <Text style={styles.errorText}>L'annuncio richiesto non è disponibile</Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -366,5 +392,37 @@ const styles = StyleSheet.create({
     color: Colors.text.inverse,
     fontSize: Typography.fontSize.base,
     fontWeight: Typography.fontWeight.semibold,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+  },
+  loadingText: {
+    marginTop: Spacing.md,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+  },
+  errorTitle: {
+    marginTop: Spacing.md,
+    fontSize: Typography.fontSize.lg,
+    color: Colors.text.primary,
+    fontWeight: Typography.fontWeight.semibold,
+    textAlign: 'center',
+  },
+  errorText: {
+    marginTop: Spacing.sm,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
+    textAlign: 'center',
   },
 });

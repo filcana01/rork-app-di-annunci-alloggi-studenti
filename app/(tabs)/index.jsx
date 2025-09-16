@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { View, FlatList, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { Map, List } from 'lucide-react-native';
+import { View, FlatList, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Map, List, AlertCircle } from 'lucide-react-native';
 import ListingCard from '@/components/ListingCard';
 import SearchBar from '@/components/SearchBar';
 import { useApp } from '@/hooks/use-app-context';
@@ -8,7 +8,7 @@ import { router } from 'expo-router';
 import { Colors, Shadows, Typography, Spacing, BorderRadius } from '@/constants/colors';
 
 export default function HomeScreen() {
-  const { filteredListings } = useApp();
+  const { filteredListings, listingsLoading, listingsError } = useApp();
   const [viewMode, setViewMode] = useState('list');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -50,13 +50,29 @@ export default function HomeScreen() {
         onFilterPress={() => router.push('/filters')}
       />
 
-      {viewMode === 'list' ? (
+      {listingsLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.text.primary} />
+          <Text style={styles.loadingText}>Caricamento annunci...</Text>
+        </View>
+      ) : listingsError ? (
+        <View style={styles.errorContainer}>
+          <AlertCircle size={48} color={Colors.text.secondary} />
+          <Text style={styles.errorTitle}>Errore di connessione</Text>
+          <Text style={styles.errorText}>Utilizzando dati di esempio</Text>
+        </View>
+      ) : viewMode === 'list' ? (
         <FlatList
           data={displayListings}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => <ListingCard listing={item} />}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nessun annuncio trovato</Text>
+            </View>
+          }
         />
       ) : (
         <View style={styles.mapContainer}>
@@ -132,6 +148,49 @@ const styles = StyleSheet.create({
     borderColor: Colors.border.light,
   },
   mapPlaceholder: {
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+  },
+  loadingText: {
+    marginTop: Spacing.md,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+  },
+  errorTitle: {
+    marginTop: Spacing.md,
+    fontSize: Typography.fontSize.lg,
+    color: Colors.text.primary,
+    fontWeight: Typography.fontWeight.semibold,
+    textAlign: 'center',
+  },
+  errorText: {
+    marginTop: Spacing.sm,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+  },
+  emptyText: {
     fontSize: Typography.fontSize.base,
     color: Colors.text.secondary,
     fontWeight: Typography.fontWeight.medium,
