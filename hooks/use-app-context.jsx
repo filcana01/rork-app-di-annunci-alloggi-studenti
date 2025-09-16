@@ -1,9 +1,9 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { translations } from '@/constants/translations';
 import { createSearchFilters } from '@/types';
-import { useListings, useCategories } from '@/hooks/use-graphql';
+import { mockListings } from '@/mocks/listings';
 
 
 export const [AppProvider, useApp] = createContextHook(() => {
@@ -11,10 +11,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [user, setUserState] = useState(null);
   const [favorites, setFavorites] = useState([]);
   const [currentFilters, setCurrentFilters] = useState(createSearchFilters());
-  
-  // Usa React Query per ottenere i listings
-  const { data: listings = [], isLoading: listingsLoading, error: listingsError } = useListings();
-  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const [filteredListings, setFilteredListings] = useState(mockListings);
 
   useEffect(() => {
     loadStoredData();
@@ -101,95 +98,91 @@ export const [AppProvider, useApp] = createContextHook(() => {
     return true;
   };
 
-  // Calcola i listings filtrati usando useMemo per ottimizzare le performance
-  const filteredListings = useMemo(() => {
-    if (!listings.length) return [];
+  const applyFilters = (filters) => {
+    setCurrentFilters(filters);
     
-    return listings.filter(listing => {
+    let filtered = mockListings.filter(listing => {
       // Category filter
-      if (currentFilters.categoryId && listing.categoryId !== currentFilters.categoryId) {
+      if (filters.categoryId && listing.categoryId !== filters.categoryId) {
         return false;
       }
       
       // Price filters
-      if (currentFilters.minPrice && listing.monthlyRent < currentFilters.minPrice) {
+      if (filters.minPrice && listing.monthlyRent < filters.minPrice) {
         return false;
       }
-      if (currentFilters.maxPrice && listing.monthlyRent > currentFilters.maxPrice) {
+      if (filters.maxPrice && listing.monthlyRent > filters.maxPrice) {
         return false;
       }
       
       // City filter
-      if (currentFilters.city && !listing.city.toLowerCase().includes(currentFilters.city.toLowerCase())) {
+      if (filters.city && !listing.city.toLowerCase().includes(filters.city.toLowerCase())) {
         return false;
       }
       
       // Surface filters
-      if (currentFilters.minSurface && listing.surfaceArea < currentFilters.minSurface) {
+      if (filters.minSurface && listing.surfaceArea < filters.minSurface) {
         return false;
       }
-      if (currentFilters.maxSurface && listing.surfaceArea > currentFilters.maxSurface) {
+      if (filters.maxSurface && listing.surfaceArea > filters.maxSurface) {
         return false;
       }
       
       // Rooms filter
-      if (currentFilters.numberOfRooms && listing.numberOfRooms !== currentFilters.numberOfRooms) {
+      if (filters.numberOfRooms && listing.numberOfRooms !== filters.numberOfRooms) {
         return false;
       }
       
       // Bathrooms filter
-      if (currentFilters.numberOfBathrooms && listing.numberOfBathrooms !== currentFilters.numberOfBathrooms) {
+      if (filters.numberOfBathrooms && listing.numberOfBathrooms !== filters.numberOfBathrooms) {
         return false;
       }
       
       // Furnishing filter
-      if (currentFilters.furnishingStatus !== null && listing.furnishingStatus !== currentFilters.furnishingStatus) {
+      if (filters.furnishingStatus !== null && listing.furnishingStatus !== filters.furnishingStatus) {
         return false;
       }
       
       // Features filters
-      if (currentFilters.hasTerrace === true && !listing.hasTerrace) {
+      if (filters.hasTerrace === true && !listing.hasTerrace) {
         return false;
       }
-      if (currentFilters.hasGarden === true && !listing.hasGarden) {
+      if (filters.hasGarden === true && !listing.hasGarden) {
         return false;
       }
-      if (currentFilters.hasPool === true && !listing.hasPool) {
+      if (filters.hasPool === true && !listing.hasPool) {
         return false;
       }
-      if (currentFilters.petsAllowed === true && !listing.petsAllowed) {
+      if (filters.petsAllowed === true && !listing.petsAllowed) {
         return false;
       }
       
       // Accessibility filters
-      if (currentFilters.hasElevator === true && !listing.hasElevator) {
+      if (filters.hasElevator === true && !listing.hasElevator) {
         return false;
       }
-      if (currentFilters.hasRampAccess === true && !listing.hasRampAccess) {
+      if (filters.hasRampAccess === true && !listing.hasRampAccess) {
         return false;
       }
       
       // Other filters
-      if (currentFilters.acceptsSwissCaution === true && !listing.acceptsSwissCaution) {
+      if (filters.acceptsSwissCaution === true && !listing.acceptsSwissCaution) {
         return false;
       }
-      if (currentFilters.isAvailableImmediately === true && !listing.isAvailableImmediately) {
+      if (filters.isAvailableImmediately === true && !listing.isAvailableImmediately) {
         return false;
       }
       
       return true;
     });
-  }, [listings, currentFilters]);
-  
-  const applyFilters = (filters) => {
-    console.log('Applying filters:', filters);
-    setCurrentFilters(filters);
+    
+    setFilteredListings(filtered);
   };
 
   const clearFilters = () => {
-    console.log('Clearing filters');
     const emptyFilters = createSearchFilters();
     setCurrentFilters(emptyFilters);
+    setFilteredListings(mockListings);
   };
 
   return {
@@ -208,11 +201,5 @@ export const [AppProvider, useApp] = createContextHook(() => {
     filteredListings,
     applyFilters,
     clearFilters,
-    // Aggiungi stati di loading e errore per l'UI
-    listings,
-    categories,
-    listingsLoading,
-    categoriesLoading,
-    listingsError,
   };
 });
