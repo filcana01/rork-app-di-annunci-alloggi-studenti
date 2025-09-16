@@ -1,9 +1,10 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { translations } from '@/constants/translations';
 import { createSearchFilters } from '@/types';
 import { mockListings } from '@/mocks/listings';
+import { useListings } from '@/services/graphql';
 
 
 export const [AppProvider, useApp] = createContextHook(() => {
@@ -11,7 +12,113 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [user, setUserState] = useState(null);
   const [favorites, setFavorites] = useState([]);
   const [currentFilters, setCurrentFilters] = useState(createSearchFilters());
-  const [filteredListings, setFilteredListings] = useState(mockListings);
+  
+  // Use GraphQL data with fallback to mock data
+  const { data: graphqlListings, isLoading: isLoadingListings, error: listingsError } = useListings();
+  
+  // Transform GraphQL data to match the expected format
+  const transformedListings = useMemo(() => {
+    if (!graphqlListings) return [];
+    
+    return graphqlListings.map((listing) => ({
+      ...listing,
+      // Transform dates from strings to Date objects
+      availabilityDate: new Date(listing.availabilityDate),
+      createdAt: new Date(listing.createdAt),
+      updatedAt: new Date(listing.updatedAt),
+      // Ensure images array is properly formatted
+      images: listing.images?.length > 0 
+        ? listing.images.sort((a, b) => a.orderIndex - b.orderIndex)
+        : [{ imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800', isPrimary: true, orderIndex: 0 }]
+    }));
+  }, [graphqlListings]);
+  
+  // Use real data if available, otherwise fallback to mock data
+  const allListings = useMemo(() => {
+    if (listingsError) {
+      console.warn('⚠️ GraphQL error, using mock data:', listingsError);
+      return mockListings;
+    }
+    return transformedListings.length > 0 ? transformedListings : mockListings;
+  }, [transformedListings, listingsError]);
+  
+  // Apply filters to the listings
+  const filteredListings = useMemo(() => {
+    return allListings.filter(listing => {
+      // Category filter
+      if (currentFilters.categoryId && listing.categoryId !== currentFilters.categoryId) {
+        return false;
+      }
+      
+      // Price filters
+      if (currentFilters.minPrice && listing.monthlyRent < currentFilters.minPrice) {
+        return false;
+      }
+      if (currentFilters.maxPrice && listing.monthlyRent > currentFilters.maxPrice) {
+        return false;
+      }
+      
+      // City filter
+      if (currentFilters.city && !listing.city.toLowerCase().includes(currentFilters.city.toLowerCase())) {
+        return false;
+      }
+      
+      // Surface filters
+      if (currentFilters.minSurface && listing.surfaceArea < currentFilters.minSurface) {
+        return false;
+      }
+      if (currentFilters.maxSurface && listing.surfaceArea > currentFilters.maxSurface) {
+        return false;
+      }
+      
+      // Rooms filter
+      if (currentFilters.numberOfRooms && listing.numberOfRooms !== currentFilters.numberOfRooms) {
+        return false;
+      }
+      
+      // Bathrooms filter
+      if (currentFilters.numberOfBathrooms && listing.numberOfBathrooms !== currentFilters.numberOfBathrooms) {
+        return false;
+      }
+      
+      // Furnishing filter
+      if (currentFilters.furnishingStatus !== null && listing.furnishingStatus !== currentFilters.furnishingStatus) {
+        return false;
+      }
+      
+      // Features filters
+      if (currentFilters.hasTerrace === true && !listing.hasTerrace) {
+        return false;
+      }
+      if (currentFilters.hasGarden === true && !listing.hasGarden) {
+        return false;
+      }
+      if (currentFilters.hasPool === true && !listing.hasPool) {
+        return false;
+      }
+      if (currentFilters.petsAllowed === true && !listing.petsAllowed) {
+        return false;
+      }
+      
+      // Accessibility filters
+      if (currentFilters.hasElevator === true && !listing.hasElevator) {
+        return false;
+      }
+      if (currentFilters.hasRampAccess === true && !listing.hasRampAccess) {
+        return false;
+      }
+      
+      // Other filters
+      if (currentFilters.acceptsSwissCaution === true && !listing.acceptsSwissCaution) {
+        return false;
+      }
+      if (currentFilters.isAvailableImmediately === true && !listing.isAvailableImmediately) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [allListings, currentFilters]);
 
   useEffect(() => {
     loadStoredData();
@@ -100,89 +207,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   const applyFilters = (filters) => {
     setCurrentFilters(filters);
-    
-    let filtered = mockListings.filter(listing => {
-      // Category filter
-      if (filters.categoryId && listing.categoryId !== filters.categoryId) {
-        return false;
-      }
-      
-      // Price filters
-      if (filters.minPrice && listing.monthlyRent < filters.minPrice) {
-        return false;
-      }
-      if (filters.maxPrice && listing.monthlyRent > filters.maxPrice) {
-        return false;
-      }
-      
-      // City filter
-      if (filters.city && !listing.city.toLowerCase().includes(filters.city.toLowerCase())) {
-        return false;
-      }
-      
-      // Surface filters
-      if (filters.minSurface && listing.surfaceArea < filters.minSurface) {
-        return false;
-      }
-      if (filters.maxSurface && listing.surfaceArea > filters.maxSurface) {
-        return false;
-      }
-      
-      // Rooms filter
-      if (filters.numberOfRooms && listing.numberOfRooms !== filters.numberOfRooms) {
-        return false;
-      }
-      
-      // Bathrooms filter
-      if (filters.numberOfBathrooms && listing.numberOfBathrooms !== filters.numberOfBathrooms) {
-        return false;
-      }
-      
-      // Furnishing filter
-      if (filters.furnishingStatus !== null && listing.furnishingStatus !== filters.furnishingStatus) {
-        return false;
-      }
-      
-      // Features filters
-      if (filters.hasTerrace === true && !listing.hasTerrace) {
-        return false;
-      }
-      if (filters.hasGarden === true && !listing.hasGarden) {
-        return false;
-      }
-      if (filters.hasPool === true && !listing.hasPool) {
-        return false;
-      }
-      if (filters.petsAllowed === true && !listing.petsAllowed) {
-        return false;
-      }
-      
-      // Accessibility filters
-      if (filters.hasElevator === true && !listing.hasElevator) {
-        return false;
-      }
-      if (filters.hasRampAccess === true && !listing.hasRampAccess) {
-        return false;
-      }
-      
-      // Other filters
-      if (filters.acceptsSwissCaution === true && !listing.acceptsSwissCaution) {
-        return false;
-      }
-      if (filters.isAvailableImmediately === true && !listing.isAvailableImmediately) {
-        return false;
-      }
-      
-      return true;
-    });
-    
-    setFilteredListings(filtered);
   };
 
   const clearFilters = () => {
     const emptyFilters = createSearchFilters();
     setCurrentFilters(emptyFilters);
-    setFilteredListings(mockListings);
   };
 
   return {
@@ -201,5 +230,9 @@ export const [AppProvider, useApp] = createContextHook(() => {
     filteredListings,
     applyFilters,
     clearFilters,
+    // GraphQL loading states
+    isLoadingListings,
+    listingsError,
+    allListings,
   };
 });
