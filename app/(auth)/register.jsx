@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
-import { useApp } from '@/hooks/use-app-context';
+import { useApp } from '../../hooks/use-app-context';
 import { router } from 'expo-router';
 import { Mail, Lock, User, Phone } from 'lucide-react-native';
 

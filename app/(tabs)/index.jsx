@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { View, FlatList, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Map, List } from 'lucide-react-native';
-import ListingCard from '@/components/ListingCard';
-import SearchBar from '@/components/SearchBar';
-import { useApp } from '@/hooks/use-app-context';
+import ListingCard from '../../components/ListingCard';
+import SearchBar from '../../components/SearchBar';
+import { useApp } from '../../hooks/use-app-context';
 import { router } from 'expo-router';
-import { Colors, Shadows, Typography, Spacing, BorderRadius } from '@/constants/colors';
+import { Colors, Shadows, Typography, Spacing, BorderRadius } from '../../constants/colors';
 
 export default function HomeScreen() {
   const { filteredListings } = useApp();

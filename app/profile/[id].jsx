@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useApp } from '@/hooks/use-app-context';
-import { mockListings } from '@/mocks/listings';
+import { useApp } from '../../hooks/use-app-context';
+import { mockListings } from '../../mocks/listings';
 import { ArrowLeft, MapPin, Star, MessageCircle, Phone, Mail, Shield, Calendar } from 'lucide-react-native';
-import ListingCard from '@/components/ListingCard';
+import ListingCard from '../../components/ListingCard';
 
 // Mock user data - in a real app this would come from an API
 const mockUsers = {

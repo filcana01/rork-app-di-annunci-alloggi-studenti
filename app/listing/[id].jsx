@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Dimensions, SafeAreaView } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { mockListings } from '@/mocks/listings';
-import { useApp } from '@/hooks/use-app-context';
+import { mockListings } from '../../mocks/listings';
+import { useApp } from '../../hooks/use-app-context';
 import { X, MapPin, Home, Bath, Maximize, Calendar, Check, MessageCircle, Heart, Building, Shield, Euro } from 'lucide-react-native';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/colors';
+import { Colors, Typography, Spacing, BorderRadius } from '../../constants/colors';
 
 const { width } = Dimensions.get('window');
 

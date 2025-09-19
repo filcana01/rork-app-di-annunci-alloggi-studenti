@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Switch } from 'react-native';
-import { useApp } from '@/hooks/use-app-context';
+import { useApp } from '../../hooks/use-app-context';
 import { router } from 'expo-router';
 import { LogOut, Globe, Plus, FileText, Settings } from 'lucide-react-native';
-import { Colors, Shadows, Typography, Spacing, BorderRadius } from '@/constants/colors';
+import { Colors, Shadows, Typography, Spacing, BorderRadius } from '../../constants/colors';
 
 export default function ProfileScreen() {
   const { t, user, isAuthenticated, logout, language, setLanguage } = useApp();

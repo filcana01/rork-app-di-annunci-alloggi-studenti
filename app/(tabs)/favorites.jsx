@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, FlatList, StyleSheet, Text, SafeAreaView } from 'react-native';
-import { useApp } from '@/hooks/use-app-context';
-import ListingCard from '@/components/ListingCard';
-import { mockListings } from '@/mocks/listings';
+import { useApp } from '../../hooks/use-app-context';
+import ListingCard from '../../components/ListingCard';
+import { mockListings } from '../../mocks/listings';
 import { Heart } from 'lucide-react-native';
 
 export default function FavoritesScreen() {

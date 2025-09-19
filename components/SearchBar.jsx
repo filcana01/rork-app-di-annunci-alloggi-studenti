@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Search, SlidersHorizontal } from 'lucide-react-native';
-import { useApp } from '@/hooks/use-app-context';
-import { Colors, Shadows, Typography, Spacing, BorderRadius } from '@/constants/colors';
+import { useApp } from '../hooks/use-app-context';
+import { Colors, Shadows, Typography, Spacing, BorderRadius } from '../constants/colors';
 
 export default function SearchBar({ onSearch, onFilterPress }) {
   const { t } = useApp();

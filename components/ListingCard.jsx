@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Heart, MapPin, Home, Car, DoorOpen } from 'lucide-react-native';
-import { useApp } from '@/hooks/use-app-context';
+import { useApp } from '../hooks/use-app-context';
 import { router } from 'expo-router';
-import { Colors, Shadows, Typography, Spacing, BorderRadius } from '@/constants/colors';
+import { Colors, Shadows, Typography, Spacing, BorderRadius } from '../constants/colors';
 
 export default function ListingCard({ listing }) {
   const { t, favorites, toggleFavorite } = useApp();

@@ -1,8 +1,8 @@
 import { Tabs } from "expo-router";
 import { Home, Search, Heart, User, MessageCircle, Plus } from "lucide-react-native";
 import React from "react";
-import { useApp } from "@/hooks/use-app-context";
-import { Colors } from "@/constants/colors";
+import { useApp } from "../../hooks/use-app-context";
+import { Colors } from "../../constants/colors";
 
 export default function TabLayout() {
   const { t } = useApp();
