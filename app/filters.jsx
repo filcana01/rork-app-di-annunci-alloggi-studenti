@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Switch, SafeAreaView } from 'react-native';
 import { X, MapPin, Home, Car, DoorOpen } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { Colors, Shadows, Typography, Spacing, BorderRadius } from '../constants/colors';
-import { useApp } from '../hooks/use-app-context';
-import { createSearchFilters, FurnishingStatus, getFurnishingStatusText } from '../types';
+import { Colors, Shadows, Typography, Spacing, BorderRadius } from '@/constants/colors';
+import { useApp } from '@/hooks/use-app-context';
+import { createSearchFilters, FurnishingStatus, getFurnishingStatusText } from '@/types';
 
 export default function FiltersScreen() {
   const { applyFilters } = useApp();

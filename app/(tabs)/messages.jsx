@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, FlatList, StyleSheet, Text, TouchableOpacity, Image, SafeAreaView } from 'react-native';
-import { useApp } from '../../hooks/use-app-context';
+import { useApp } from '@/hooks/use-app-context';
 import { MessageCircle } from 'lucide-react-native';
 
 const mockChats = [

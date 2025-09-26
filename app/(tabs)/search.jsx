@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Text, TextInput, TouchableOpacity, SafeAreaView, Modal } from 'react-native';
-import { useApp } from '../../hooks/use-app-context';
-import ListingCard from '../../components/ListingCard';
-import { mockListings } from '../../mocks/listings';
+import { useApp } from '@/hooks/use-app-context';
+import ListingCard from '@/components/ListingCard';
+import { mockListings } from '@/mocks/listings';
 import { X, SlidersHorizontal, MapPin } from 'lucide-react-native';
 
 export default function SearchScreen() {

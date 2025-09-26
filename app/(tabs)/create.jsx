@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Alert, Image } from 'react-native';
-import { useApp } from '../../hooks/use-app-context';
+import { useApp } from '@/hooks/use-app-context';
 import { Camera, MapPin, Plus, X, Upload, Calendar } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { createListing, FurnishingStatus, ListingStatus, getFurnishingStatusText } from '../../types';
+import { createListing, FurnishingStatus, ListingStatus, getFurnishingStatusText } from '@/types';
 
 export default function CreateListingScreen() {
   const [form, setForm] = useState(createListing({

@@ -1,9 +1,9 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
-import { translations } from '../constants/translations';
-import { createSearchFilters } from '../types';
-import { mockListings } from '../mocks/listings';
+import { translations } from '@/constants/translations';
+import { createSearchFilters } from '@/types';
+import { mockListings } from '@/mocks/listings';
 
 
 export const [AppProvider, useApp] = createContextHook(() => {
