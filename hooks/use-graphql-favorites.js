@@ -1,16 +1,26 @@
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation, useApolloClient } from '@apollo/client';
 import { GET_FAVORITES } from '@/graphql/queries';
 import { ADD_FAVORITE, REMOVE_FAVORITE } from '@/graphql/mutations';
+import { useState, useEffect } from 'react';
 
 export function useFavorites(userId) {
+  const [hasClient, setHasClient] = useState(false);
+  const client = useApolloClient();
+
+  useEffect(() => {
+    if (client) {
+      setHasClient(true);
+    }
+  }, [client]);
+
   const { data, loading, error, refetch } = useQuery(GET_FAVORITES, {
     variables: { userId: parseInt(userId) },
-    skip: !userId,
+    skip: !userId || !hasClient,
   });
 
   return {
     favorites: data?.favorites || [],
-    loading,
+    loading: !hasClient || loading,
     error,
     refetch,
   };

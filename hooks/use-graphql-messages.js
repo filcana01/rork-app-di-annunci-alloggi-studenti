@@ -1,32 +1,51 @@
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation, useApolloClient } from '@apollo/client';
 import { GET_MESSAGES, GET_CONVERSATIONS } from '@/graphql/queries';
 import { CREATE_MESSAGE, DELETE_MESSAGE } from '@/graphql/mutations';
+import { useState, useEffect } from 'react';
 
 export function useMessages(filter) {
+  const [hasClient, setHasClient] = useState(false);
+  const client = useApolloClient();
+
+  useEffect(() => {
+    if (client) {
+      setHasClient(true);
+    }
+  }, [client]);
+
   const { data, loading, error, refetch } = useQuery(GET_MESSAGES, {
     variables: { filter },
-    skip: !filter,
-    pollInterval: 5000,
+    skip: !filter || !hasClient,
+    pollInterval: hasClient ? 5000 : undefined,
   });
 
   return {
     messages: data?.messages || [],
-    loading,
+    loading: !hasClient || loading,
     error,
     refetch,
   };
 }
 
 export function useConversations(userId) {
+  const [hasClient, setHasClient] = useState(false);
+  const client = useApolloClient();
+
+  useEffect(() => {
+    if (client) {
+      setHasClient(true);
+    }
+  }, [client]);
+
   const { data, loading, error, refetch } = useQuery(GET_CONVERSATIONS, {
     variables: { input: { userId: parseInt(userId) } },
-    skip: !userId,
-    pollInterval: 10000,
+    skip: !userId || !hasClient,
+    pollInterval: hasClient ? 10000 : undefined,
   });
 
   return {
     conversations: data?.conversations || [],
-    loading,
+    loading: !hasClient || loading,
     error,
     refetch,
   };
