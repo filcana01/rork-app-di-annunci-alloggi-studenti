@@ -1,50 +1,30 @@
-import { useQuery, useMutation, useApolloClient } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
 import { GET_LISTINGS, GET_LISTING_BY_ID } from '@/graphql/queries';
 import { CREATE_LISTING, UPDATE_LISTING, DELETE_LISTING } from '@/graphql/mutations';
-import { useState, useEffect } from 'react';
 
 export function useListings(filter = null, pagination = null) {
-  const [hasClient, setHasClient] = useState(false);
-  const client = useApolloClient();
-
-  useEffect(() => {
-    if (client) {
-      setHasClient(true);
-    }
-  }, [client]);
-
   const { data, loading, error, refetch } = useQuery(GET_LISTINGS, {
     variables: { filter, pagination },
     fetchPolicy: 'cache-and-network',
-    skip: !hasClient,
   });
 
   return {
     listings: data?.listings || [],
-    loading: !hasClient || loading,
+    loading,
     error,
     refetch,
   };
 }
 
 export function useListingById(id) {
-  const [hasClient, setHasClient] = useState(false);
-  const client = useApolloClient();
-
-  useEffect(() => {
-    if (client) {
-      setHasClient(true);
-    }
-  }, [client]);
-
   const { data, loading, error, refetch } = useQuery(GET_LISTING_BY_ID, {
     variables: { id: parseInt(id) },
-    skip: !id || !hasClient,
+    skip: !id,
   });
 
   return {
     listing: data?.listing || null,
-    loading: !hasClient || loading,
+    loading,
     error,
     refetch,
   };
