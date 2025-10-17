@@ -3,8 +3,10 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { ApolloProvider } from "@apollo/client";
 import { AppProvider } from "@/hooks/use-app-context";
 import { trpc, trpcClient } from "@/lib/trpc";
+import { apolloClient } from "@/lib/apollo";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -27,14 +29,16 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <AppProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <RootLayoutNav />
-          </GestureHandlerRootView>
-        </AppProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <ApolloProvider client={apolloClient}>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <AppProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <RootLayoutNav />
+            </GestureHandlerRootView>
+          </AppProvider>
+        </QueryClientProvider>
+      </trpc.Provider>
+    </ApolloProvider>
   );
 }
